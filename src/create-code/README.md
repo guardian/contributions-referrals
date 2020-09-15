@@ -33,3 +33,10 @@ code = referral code
 email = the email address of the user
 source = referral source (thankyou, or the name of the braze campaign)
 ```
+
+If testing in the AWS lambda console, the event data must be stringified:
+```
+{
+  "body": "{\"source\": \"thankyou\",\"email\": \"someemail@gu.com\",\"code\": \"EHRKJH33\"}"
+}
+```
