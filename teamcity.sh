@@ -7,8 +7,7 @@ npm install -g yarn
 cp ../lib/* .
 
 yarn install
-echo "listing..."
-ls
+
 # Will place .js files in target
 yarn run build
 

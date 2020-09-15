@@ -7,7 +7,7 @@ import SSM = require('aws-sdk/clients/ssm');
 const ssmStage = isProd() ? 'PROD' : 'CODE';
 
 export async function getParamsFromSSM(ssm: SSM): Promise<DBConfig> {
-    const dbPath = `/contributions-store/referral-lambda/db-config/${ssmStage}`;
+    const dbPath = `/contributions-referrals/db-config/${ssmStage}`;
 
     const ssmResponse = await ssm.getParametersByPath({
         Path: dbPath,
