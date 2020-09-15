@@ -3,10 +3,11 @@
     "target": "esnext",
     "module": "commonjs",
     "outDir": "target",
-    "sourceMap": true
+    "sourceMap": true,
+    "allowJs": true
   },
   "include": [
     "./**/*.ts",
-    "./**/*.js"
+    "./gen-nodejs/*.js"
   ]
 }
