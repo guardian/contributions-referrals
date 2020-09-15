@@ -5,7 +5,7 @@
 //
 "use strict";
 
-var thrift = require('thrift');
+var thrift = require('thrift/src/thrift');
 var Thrift = thrift.Thrift;
 var Q = thrift.Q;
 var Int64 = require('node-int64');

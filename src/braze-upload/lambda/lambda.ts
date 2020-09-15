@@ -1,6 +1,7 @@
 const AWS = require('aws-sdk');
-const Thrift = require('thrift');
-const acquisition_types = require('./gen-nodejs/acquisition_types');
+// TODO - resolve thrift -> thrift/src/thrift
+const Thrift = require('thrift/src/thrift');
+const acquisition_types = require('../gen-nodejs/acquisition_types');
 
 export async function handler(event: any, context: any): Promise<null> {
     console.log("events:", event.Records.length);
