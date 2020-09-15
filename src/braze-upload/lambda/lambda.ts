@@ -1,4 +1,5 @@
-const thrift = require('thrift');
+const AWS = require('aws-sdk');
+const Thrift = require('thrift');
 const acquisition_types = require('./gen-nodejs/acquisition_types');
 
 export async function handler(event: any, context: any): Promise<null> {
@@ -6,8 +7,8 @@ export async function handler(event: any, context: any): Promise<null> {
     event.Records.map(record => {
         const payload = new Buffer(record.kinesis.data, 'base64');
         console.log("payload", payload);
-        const transport = new thrift.TFramedTransport(payload);
-        const protocol = new thrift.TCompactProtocol(transport);
+        const transport = new Thrift.TFramedTransport(payload);
+        const protocol = new Thrift.TCompactProtocol(transport);
         const acquisition = new acquisition_types.Event();
 
         const result = acquisition.read(protocol);
