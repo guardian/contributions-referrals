@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "target": "esnext",
+    "module": "commonjs",
+    "outDir": "target",
+    "sourceMap": true,
+    "allowJs": true
+  },
+  "include": [
+    "./**/*.ts",
+    "./**/gen-nodejs/*.js"
+  ]
+}
