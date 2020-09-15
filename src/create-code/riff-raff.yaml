@@ -1,0 +1,18 @@
+stacks: [support]
+regions: [eu-west-1]
+
+deployments:
+  contributions-referrals-create-code:
+    type: aws-lambda
+    parameters:
+      prefixStack: false
+      bucket: membership-dist
+      fileName: contributions-referrals-create-code.zip
+      functionNames:
+        - contributions-referrals-create-code-
+    dependencies: [contributions-referrals-create-code-cloudformation]
+  contributions-referrals-create-code-cloudformation:
+    type: cloud-formation
+    app: contributions-referrals-create-code
+    parameters:
+      templatePath: cloudformation/cfn.yaml

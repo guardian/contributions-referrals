@@ -1,0 +1,5 @@
+{
+		"source": "thankyou",
+		"email": "someemail@gu.com",
+		"code": "EHRKJH33"
+}
