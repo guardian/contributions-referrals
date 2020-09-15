@@ -23,6 +23,9 @@ Parameters:
   VpcSubnets:
     Description: Subnets for RDS access
     Type: List<AWS::EC2::Subnet::Id>
+  StreamArn:
+    Description: ARN of the kinesis stream
+    Type: String
 
 Conditions:
   IsProd: !Equals [ !Ref Stage, "PROD" ]
@@ -57,3 +60,10 @@ Resources:
             Action:
               - ssm:GetParametersByPath
             Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/contributions-referrals/braze-upload/db-config/${Stage}
+      Events:
+        Stream:
+          Type: Kinesis
+          Properties:
+            Stream: !Ref StreamArn
+            BatchSize: 10
+            StartingPosition: LATEST
