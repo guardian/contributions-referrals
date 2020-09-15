@@ -9,7 +9,7 @@ export async function handler(event: any, context: any): Promise<null> {
         console.log("payload", payload);
         const transport = new Thrift.TFramedTransport(payload);
         const protocol = new Thrift.TCompactProtocol(transport);
-        const acquisition = new acquisition_types.Event();
+        const acquisition = new acquisition_types.Acquisition();
 
         const result = acquisition.read(protocol);
         console.log("result",result)
