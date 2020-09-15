@@ -37,7 +37,7 @@ Resources:
       FunctionName: !Sub contributions-referrals-braze-upload-${Stage}
       Description: The lambda to send referrals data to Braze
       Runtime: nodejs10.x
-      Handler: braze-upload/lambda/lambda.handler
+      Handler: lambda/lambda.handler
       MemorySize: 128
       Timeout: 30
       Environment:

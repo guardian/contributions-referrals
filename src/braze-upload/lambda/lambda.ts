@@ -3,7 +3,7 @@ const Thrift = require('thrift');
 const acquisition_types = require('../gen-nodejs/acquisition_types');
 
 export async function handler(event: any, context: any): Promise<null> {
-    console.log("events:", event.Records.length);
+    console.log("events:", JSON.stringify(event));
     event.Records.map(record => {
         const payload = new Buffer(record.kinesis.data, 'base64');
         console.log("payload", payload);
