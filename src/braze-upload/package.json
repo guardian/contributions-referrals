@@ -8,7 +8,7 @@
   "dependencies": {
     "aws-sdk": "^2.264.1",
     "moment": "2.22.2",
-    "thrift": "0.9.3",
+    "thrift-serializer": "^1.1.0",
     "typescript": "2.8.3"
   },
   "devDependencies": {
@@ -18,7 +18,7 @@
   "scripts": {
     "clean": "rm -rf target",
     "build": "tsc",
-    "local": "node target/lambda/local.js",
+    "local": "npm run build && node target/braze-upload/lambda/local.js",
     "package": "ARTEFACT_PATH=$PWD/target VERBOSE=true riffraff-artefact"
   }
 }
