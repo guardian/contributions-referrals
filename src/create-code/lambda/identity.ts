@@ -18,12 +18,14 @@ export function getBrazeUuidByEmail(email: string, accessToken: string): Promise
         }
         return response.json();
     }).then((identityResponse) => {
-        if (identityResponse.user && identityResponse.user.privateFields && identityResponse.user.privateFields.brazeUuid) {
+        if (
+            identityResponse.user &&
+            identityResponse.user.privateFields &&
+            identityResponse.user.privateFields.brazeUuid
+        ) {
             return Promise.resolve(identityResponse.user.privateFields.brazeUuid);
+        } else {
+            return Promise.reject(`Missing brazeUuid in identity API response: ${JSON.stringify(identityResponse)}`)
         }
-        // const uuid = identityResponse.user?.privateFields?.brazeUuid;
-
-        // if (uuid) return Promise.resolve(uuid);
-        else return Promise.reject(`Missing brazeUuid in identity API response: ${JSON.stringify(identityResponse)}`)
     })
 }
