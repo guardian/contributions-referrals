@@ -8,11 +8,11 @@ import {
     QuerySuccess,
     referralCreatedEventToQueryConfig
 } from './db';
-import {getParamsFromSSM} from '../lib/ssm';
+import {getDatabaseParamsFromSSM, getParamFromSSM, ssmStage} from '../lib/ssm';
 import {logError, logInfo, logWarning} from '../lib/log';
 import {isRunningLocally} from "../lib/stage";
 import {ReferralCreatedEvent} from "./models";
-import * as process from "process";
+import {getBrazeUuidByEmail} from "./identity";
 
 const headers = {
     "Content-Type": "application/json",
@@ -24,25 +24,40 @@ const headers = {
 const AWS = require('aws-sdk');
 
 const ssm: SSM = new AWS.SSM({region: 'eu-west-1'});
-const dbConnectionPool: Promise<Pool> =  getParamsFromSSM(ssm).then(createDatabaseConnectionPool);
+
+const dbConnectionPool: Promise<Pool> =
+    getDatabaseParamsFromSSM(ssm).then(createDatabaseConnectionPool);
+const identityAccessToken: Promise<string> =
+    getParamFromSSM(ssm, `/contributions-referrals/idapi/${ssmStage}/accessToken`);
 
 export async function handler(event: any, context: any): Promise<object> {
-    logInfo('Stage: ', process.env.Stage);
     logInfo('event: ', event);
     const parsedEvent = isRunningLocally() ? event : JSON.parse(event.body);
     logInfo('parsed: ', parsedEvent);
 
-    const validatedEvent = validate(parsedEvent);
-    return validatedEvent ? persist(validatedEvent) : badRequest
+
+    return resolveBrazeUuid(parsedEvent).then(validatedEvent =>
+        validatedEvent ? persist(validatedEvent) : badRequest
+    );
+}
+
+function resolveBrazeUuid(event: any): Promise<ReferralCreatedEvent | null> {
+    if (!!event.email) {
+        // We have an email, so first fetch user's brazeUuid with identity api
+        return identityAccessToken
+            .then(token => getBrazeUuidByEmail(event.email, token))
+            .then(brazeUuid => validate({
+                ...event,
+                brazeUuid,
+            }))
+    } else {
+        return Promise.resolve(validate(event));
+    }
 }
 
 function validate(event: any): ReferralCreatedEvent | null {
-    if (!!event.code && !!event.email && !!event.source) {
-        return {
-            code: event.code,
-            source: event.source,
-            email: event.email
-        };
+    if (!!event.code && !!event.brazeUuid && !!event.source && !!event.campaignId) {
+        return event
     } else {
         logWarning('Failed to parse event: ', event);
         return null

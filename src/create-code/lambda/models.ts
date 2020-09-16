@@ -1,5 +1,6 @@
 export type ReferralCreatedEvent = {
     code: string,
-    email: string,
+    brazeUuid: string,
     source: string,
+    campaignId: string,
 }

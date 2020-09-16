@@ -1,5 +1,6 @@
 {
 		"source": "thankyou",
 		"email": "someemail@gu.com",
-		"code": "EHRKJH33"
+		"code": "EHRKJH33",
+		"campaignId": "test-campaign"
 }
