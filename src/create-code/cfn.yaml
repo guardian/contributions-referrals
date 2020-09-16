@@ -73,7 +73,9 @@ Resources:
             Effect: Allow
             Action:
               - ssm:GetParametersByPath
-            Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/contributions-referrals/db-config/${Stage}
+            Resource:
+              - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/contributions-referrals/db-config/${Stage}
+              - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/contributions-referrals/idapi/${Stage}
       Events:
         HttpPost:
           Type: Api
