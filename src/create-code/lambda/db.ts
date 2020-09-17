@@ -44,7 +44,7 @@ export function referralCreatedEventToQueryConfig(record: ReferralCreatedEvent):
                 referral_code,
                 campaign_id
             ) VALUES (
-                $1, $2, $3
+                $1, $2, $3, $4
             )
             RETURNING *;
         `,
