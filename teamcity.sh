@@ -6,6 +6,11 @@ npm install -g yarn
 # So that we can share the code in lib between sub-projects.
 cp ../lib/* .
 
+echo "PWD"
+echo `pwd`
+echo "LS"
+echo `ls`
+
 yarn install
 
 # Will place .js files in target
