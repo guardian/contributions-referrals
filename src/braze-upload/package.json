@@ -9,7 +9,9 @@
     "aws-sdk": "^2.264.1",
     "moment": "2.22.2",
     "thrift-serializer": "^1.1.0",
-    "typescript": "2.8.3"
+    "typescript": "2.8.3",
+    "pg": "^7.9.0",
+    "pg-format": "^1.0.4"
   },
   "devDependencies": {
     "@types/node": "10.14.22",

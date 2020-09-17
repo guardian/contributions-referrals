@@ -7,7 +7,7 @@ import {
     QueryRes,
     QuerySuccess,
     referralCreatedEventToQueryConfig
-} from './db';
+} from '../lib/db';
 import {getDatabaseParamsFromSSM, getParamFromSSM, ssmStage} from '../lib/ssm';
 import {logError, logInfo, logWarning} from '../lib/log';
 import {isRunningLocally} from "../lib/stage";

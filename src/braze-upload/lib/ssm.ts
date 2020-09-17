@@ -4,9 +4,9 @@ import {isProd, isRunningLocally} from './stage';
 import SSM = require('aws-sdk/clients/ssm');
 
 // locally, if process.env.Stage is not set, it will fetch CODE credentials from SSM
-export const ssmStage = isProd() ? 'PROD' : 'CODE';
+const ssmStage = isProd() ? 'PROD' : 'CODE';
 
-export async function getDatabaseParamsFromSSM(ssm: SSM): Promise<DBConfig> {
+export async function getParamsFromSSM(ssm: SSM): Promise<DBConfig> {
     const dbPath = `/contributions-referrals/db-config/${ssmStage}`;
 
     const ssmResponse = await ssm.getParametersByPath({
@@ -32,9 +32,11 @@ export async function getDatabaseParamsFromSSM(ssm: SSM): Promise<DBConfig> {
     throw new Error(`Could not get config from SSM path ${dbPath}`);
 }
 
-export async function getParamFromSSM(ssm: SSM, path: string): Promise<string> {
+export async function getParamFromSSM(ssm: SSM, path: String): Promise<string> {
+    const paramLocation = `${path}/${ssmStage}`;
+
     const ssmResponse = await ssm.getParameter({
-        Name: path,
+        Name: paramLocation,
         WithDecryption: true
     }).promise();
 
@@ -42,5 +44,5 @@ export async function getParamFromSSM(ssm: SSM, path: string): Promise<string> {
         return ssmResponse.Parameter.Value;
     }
 
-    throw new Error(`Could not get config from SSM path ${path}`);
+    throw new Error(`Could not get config from SSM path ${paramLocation}`);
 }
