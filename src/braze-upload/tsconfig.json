@@ -9,5 +9,8 @@
   "include": [
     "./**/*.ts",
     "./**/gen-nodejs/*.js"
+  ],
+  "exclude": [
+    "**/create-code/*"
   ]
 }
