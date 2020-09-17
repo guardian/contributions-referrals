@@ -11,7 +11,7 @@ To store referral codes.
 - Uses dummy data in `dummy-input.txt`
 - AWS credentials are fetched from `[membership]` in `~/.aws/credentials` (no need to set environment variables)
 - Config comes from SSM, path `/contributions-store/referral-lambda/db-config/..../CODE`
-- `yarn run local` to execute (it automatically runs `tsc` to compile typescript first)
+- `AWS_PROFILE=membership yarn run local` to execute (it automatically runs `tsc` to compile typescript first)
 - Connects to CODE database, so you will need to run `open_ssh_tunnel -s CODE` (see https://github.com/guardian/contributions-platform/tree/master/contributions-store#how-to-connect if you're not sure what this means)
 
 ### Details
