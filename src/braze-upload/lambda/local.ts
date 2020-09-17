@@ -1,5 +1,5 @@
 import { handler } from "./lambda";
-import {logInfo} from "../../lib/log";
+import {logInfo} from "../lib/log";
 
 const AWS = require('aws-sdk');
 const fs = require('fs');
