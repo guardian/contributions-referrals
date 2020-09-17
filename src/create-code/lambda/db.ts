@@ -1,5 +1,5 @@
 import {Pool, QueryConfig, QueryResult} from 'pg';
-import {logError, logInfo} from '../../lib/log';
+import {logError, logInfo} from '../lib/log';
 import {ReferralCreatedEvent} from "./models";
 
 export type DBConfig = {

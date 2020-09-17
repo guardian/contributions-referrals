@@ -8,9 +8,9 @@ import {
     QuerySuccess,
     referralCreatedEventToQueryConfig
 } from './db';
-import {getParamsFromSSM} from '../../lib/ssm';
-import {logError, logInfo, logWarning} from '../../lib/log';
-import {isRunningLocally} from "../../lib/stage";
+import {getParamsFromSSM} from '../lib/ssm';
+import {logError, logInfo, logWarning} from '../lib/log';
+import {isRunningLocally} from "../lib/stage";
 import {ReferralCreatedEvent} from "./models";
 import * as process from "process";
 

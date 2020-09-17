@@ -1,4 +1,4 @@
-import {DBConfig} from '../create-code/lambda/db';
+import {DBConfig} from '../lambda/db';
 import {isProd, isRunningLocally} from './stage';
 // TODO - fix build locally - the node_modules dir needs to be copied to top level
 import SSM = require('aws-sdk/clients/ssm');

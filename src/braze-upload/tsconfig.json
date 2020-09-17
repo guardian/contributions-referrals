@@ -4,14 +4,10 @@
     "module": "commonjs",
     "outDir": "target",
     "sourceMap": true,
-    "allowJs": true,
-    "rootDir": "./"
+    "allowJs": true
   },
   "include": [
     "./**/*.ts",
     "./**/gen-nodejs/*.js"
-  ],
-  "exclude": [
-    "**/create-code/*"
   ]
 }
