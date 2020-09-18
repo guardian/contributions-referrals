@@ -51,7 +51,7 @@ Resources:
       FunctionName: !Sub contributions-referrals-create-code-${Stage}
       Description: A lambda for saving referral codes to rds
       Runtime: nodejs10.x
-      Handler: create-code/lambda/lambda.handler
+      Handler: lambda/lambda.handler
       MemorySize: 128
       Timeout: 30
       Environment:
