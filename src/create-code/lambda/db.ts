@@ -36,25 +36,25 @@ export function createDatabaseConnectionPool(dbConfig: DBConfig): Pool {
 }
 
 export function referralCreatedEventToQueryConfig(record: ReferralCreatedEvent): QueryConfig {
-
-
-        return {
-            text: `
-                INSERT INTO contribution_referrals(
-                    email,
-                    source,
-                    code
-                ) VALUES (
-                    $1, $2, $3
-                )
-                RETURNING *;
-            `,
-            values: [
-                record.email,
-                record.source,
-                record.code,
-            ]
-        };
+    return {
+        text: `
+            INSERT INTO contribution_referral_codes(
+                braze_uuid,
+                source,
+                referral_code,
+                campaign_id
+            ) VALUES (
+                $1, $2, $3, $4
+            )
+            RETURNING *;
+        `,
+        values: [
+            record.brazeUuid,
+            record.source,
+            record.code,
+            record.campaignId
+        ]
+    };
 }
 
 function queryToString(queryConfig: QueryConfig): string {
