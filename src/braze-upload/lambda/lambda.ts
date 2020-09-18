@@ -28,6 +28,7 @@ export async function handler(event: Event, context: any): Promise<any> {
                 if (err) {
                     reject(err);
                 }
+                console.log("event:", JSON.stringify(msg));
 
                 const referralCodeParam = msg.queryParameters.find(qp => qp.name === 'referralCode');
                 if (!!referralCodeParam && !!referralCodeParam.value) {
