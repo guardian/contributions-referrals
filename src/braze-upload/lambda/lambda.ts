@@ -22,7 +22,7 @@ export async function handler(event: Event, context: any): Promise<any> {
     console.log("events:", JSON.stringify(event));
     const pool = await dbConnectionPool;
 
-    return event.Records.map(record => {
+    const resultPromises = event.Records.map(record => {
         const referralCodePromise: Promise<string> = new Promise((resolve, reject) => {
             serializer.read(acquisition_types.Acquisition, record.kinesis.data, function (err, msg) {
                 if (err) {
@@ -43,4 +43,8 @@ export async function handler(event: Event, context: any): Promise<any> {
         // TODO - write to contribution_successful_referrals table and send to Braze
         return referralCodePromise.then((referralCode: string) => fetchReferralData(referralCode, pool))
     });
+
+    return Promise
+        .all(resultPromises)
+        .then(results => results.map(result => console.log("result:", result.rows)))
 }
