@@ -1,7 +1,7 @@
 {
   "name": "contributions-referrals-braze-upload",
   "isAwsLambda": true,
-  "cloudformation": false,
+  "cloudformation": "../cfn.yaml",
   "projectName": "Contributions::contributions-referrals-braze-upload",
   "buildDir": "./target",
   "riffraffFile": "./riff-raff.yaml",
