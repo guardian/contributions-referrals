@@ -1,6 +1,6 @@
 import {Pool, QueryResult} from "pg";
 import SSM = require("aws-sdk/clients/ssm");
-import {createDatabaseConnectionPool, fetchReferralData} from "../lib/db";
+import {createDatabaseConnectionPool, fetchReferralData, writeSuccessfulReferral} from "../lib/db";
 import {getParamsFromSSM} from "../lib/ssm";
 
 const AWS = require('aws-sdk');
@@ -49,7 +49,22 @@ export async function handler(event: Event, context: any): Promise<any> {
             fetchReferralData(referralCode, pool)
                 .then((queryResult: QueryResult) => {
                     // TODO - write to contribution_successful_referrals table and send to Braze
-                    return queryResult.rows
+                    const row = queryResult.rows[0];
+                    if (row) {
+                        return writeSuccessfulReferral(
+                            {
+                                brazeUuid: row.braze_uuid,
+                                referralCode: referralCode,
+                                campaignId: row.campaign_id,
+                            },
+                            pool
+                        );
+                    } else {
+                        return Promise.reject(`No brazeUuid found for referralCode ${referralCode}`);
+                    }
+                })
+                .then(result => {
+                    console.log(result)
                 })
         );
 
