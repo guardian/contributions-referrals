@@ -51,33 +51,34 @@ export async function handler(event: Event, context: any): Promise<any> {
     const resultPromises = maybeReferralCodes
         .filter(maybeReferralCode => !!maybeReferralCode)
         .map(async referralCode => {
+            // Fetch the braze uuid
             const brazeUuidLookupResult: QueryResult = await fetchReferralData(referralCode, pool);
 
             const row = brazeUuidLookupResult.rows[0];
-            if (row) {
-                const writeResult: QueryResult = await writeSuccessfulReferral(
-                    {
-                        brazeUuid: row.braze_uuid,
-                        referralCode: referralCode,
-                        campaignId: row.campaign_id,
-                    },
-                    pool
-                );
-
-                if (writeResult.rows) {
-                    const campaignIdsResult: QueryResult = await fetchCampaignIds(row.braze_uuid, pool);
-                    if (campaignIdsResult.rows.length) {
-                        return campaignIdsResult.rows.map(row => row.campaign_id);
-                    } else {
-                        return Promise.reject(`No campaignIds found for brazeUuid ${row.braze_uuid}`);
-                    }
-                } else {
-                    return Promise.reject(`Failed to write successful referral for code ${referralCode}`);
-                }
-            } else {
+            if (!row) {
                 return Promise.reject(`No brazeUuid found for referralCode ${referralCode}`);
             }
 
+            // Write the successful referral
+            const writeResult: QueryResult = await writeSuccessfulReferral(
+                {
+                    brazeUuid: row.braze_uuid,
+                    referralCode: referralCode,
+                    campaignId: row.campaign_id,
+                },
+                pool
+            );
+            if (writeResult.rows.length <= 0) {
+                return Promise.reject(`Failed to write successful referral for code ${referralCode}`);
+            }
+
+            // Fetch the distinct set of campaignIds for this braze user
+            const campaignIdsResult: QueryResult = await fetchCampaignIds(row.braze_uuid, pool);
+            if (campaignIdsResult.rows.length <= 0) {
+                return Promise.reject(`No campaignIds found for brazeUuid ${row.braze_uuid}`);
+            }
+
+            return campaignIdsResult.rows.map(row => row.campaign_id);
         });
 
     return Promise.all(resultPromises);
