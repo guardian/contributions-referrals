@@ -1,4 +1,4 @@
-import {Pool} from "pg";
+import {Pool, QueryResult} from "pg";
 import SSM = require("aws-sdk/clients/ssm");
 import {createDatabaseConnectionPool, fetchReferralData} from "../lib/db";
 import {getParamsFromSSM} from "../lib/ssm";
@@ -40,11 +40,13 @@ export async function handler(event: Event, context: any): Promise<any> {
             });
         });
 
-        // TODO - write to contribution_successful_referrals table and send to Braze
-        return referralCodePromise.then((referralCode: string) => fetchReferralData(referralCode, pool))
+        return referralCodePromise
+            .then((referralCode: string) => fetchReferralData(referralCode, pool))
+            .then((queryResult: QueryResult) => {
+                // TODO - write to contribution_successful_referrals table and send to Braze
+                return queryResult.rows
+            })
     });
 
-    return Promise
-        .all(resultPromises)
-        .then(results => results.map(result => console.log("result:", result.rows)))
+    return Promise.all(resultPromises);
 }
