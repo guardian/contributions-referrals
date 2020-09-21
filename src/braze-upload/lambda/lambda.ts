@@ -1,6 +1,11 @@
 import {Pool, QueryResult} from "pg";
 import SSM = require("aws-sdk/clients/ssm");
-import {createDatabaseConnectionPool, fetchReferralData, writeSuccessfulReferral} from "../lib/db";
+import {
+    createDatabaseConnectionPool,
+    fetchReferralData,
+    fetchCampaignIds,
+    writeSuccessfulReferral
+} from "../lib/db";
 import {getParamsFromSSM} from "../lib/ssm";
 
 const AWS = require('aws-sdk');
@@ -45,28 +50,35 @@ export async function handler(event: Event, context: any): Promise<any> {
 
     const resultPromises = maybeReferralCodes
         .filter(maybeReferralCode => !!maybeReferralCode)
-        .map(referralCode =>
-            fetchReferralData(referralCode, pool)
-                .then((queryResult: QueryResult) => {
-                    // TODO - write to contribution_successful_referrals table and send to Braze
-                    const row = queryResult.rows[0];
-                    if (row) {
-                        return writeSuccessfulReferral(
-                            {
-                                brazeUuid: row.braze_uuid,
-                                referralCode: referralCode,
-                                campaignId: row.campaign_id,
-                            },
-                            pool
-                        );
+        .map(async referralCode => {
+            const brazeUuidLookupResult: QueryResult = await fetchReferralData(referralCode, pool);
+
+            const row = brazeUuidLookupResult.rows[0];
+            if (row) {
+                const writeResult: QueryResult = await writeSuccessfulReferral(
+                    {
+                        brazeUuid: row.braze_uuid,
+                        referralCode: referralCode,
+                        campaignId: row.campaign_id,
+                    },
+                    pool
+                );
+
+                if (writeResult.rows) {
+                    const campaignIdsResult: QueryResult = await fetchCampaignIds(row.braze_uuid, pool);
+                    if (campaignIdsResult.rows.length) {
+                        return campaignIdsResult.rows.map(row => row.campaign_id);
                     } else {
-                        return Promise.reject(`No brazeUuid found for referralCode ${referralCode}`);
+                        return Promise.reject(`No campaignIds found for brazeUuid ${row.braze_uuid}`);
                     }
-                })
-                .then(result => {
-                    console.log(result)
-                })
-        );
+                } else {
+                    return Promise.reject(`Failed to write successful referral for code ${referralCode}`);
+                }
+            } else {
+                return Promise.reject(`No brazeUuid found for referralCode ${referralCode}`);
+            }
+
+        });
 
     return Promise.all(resultPromises);
 }

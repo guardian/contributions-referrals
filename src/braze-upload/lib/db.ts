@@ -65,6 +65,15 @@ export function writeSuccessfulReferral(successfulReferral: SuccessfulReferral, 
     return handleQuery(pool.query(query), query);
 }
 
+export function fetchCampaignIds(brazeUuid: string, pool: Pool): Promise<QueryResult> {
+    const query: QueryConfig = {
+        text: 'SELECT DISTINCT(campaign_id) FROM contribution_successful_referrals WHERE braze_uuid = $1;',
+        values: [brazeUuid]
+    };
+
+    return handleQuery(pool.query(query), query);
+}
+
 export function handleQuery(
     queryPromise: Promise<QueryResult>,
     queryConfig: QueryConfig,
