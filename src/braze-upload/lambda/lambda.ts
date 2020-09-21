@@ -18,7 +18,7 @@ interface Event {
     }[]
 }
 
-const getReferralCodeFromKinesisRecord = (rawThriftData: any): Promise<string> =>
+const getReferralCodeFromThriftBytes = (rawThriftData: any): Promise<string> =>
     new Promise((resolve, reject) => {
         serializer.read(acquisition_types.Acquisition, rawThriftData, function (err, msg) {
             if (err) {
@@ -40,7 +40,7 @@ export async function handler(event: Event, context: any): Promise<any> {
     const pool = await dbConnectionPool;
 
     const resultPromises = event.Records.map(record =>
-        getReferralCodeFromKinesisRecord(record.kinesis.data)
+        getReferralCodeFromThriftBytes(record.kinesis.data)
             .then((referralCode: string) => fetchReferralData(referralCode, pool))
             .then((queryResult: QueryResult) => {
                 // TODO - write to contribution_successful_referrals table and send to Braze
