@@ -1,16 +1,57 @@
+import {Pool, QueryResult} from "pg";
+import SSM = require("aws-sdk/clients/ssm");
+import {createDatabaseConnectionPool, fetchReferralData} from "../lib/db";
+import {getParamsFromSSM} from "../lib/ssm";
+
 const AWS = require('aws-sdk');
 const acquisition_types = require('../gen-nodejs/acquisition_types');
 const serializer = require('thrift-serializer');
 
-export async function handler(event: any, context: any): Promise<null> {
-    console.log("events:", JSON.stringify(event));
-    event.Records.map(record => {
-        serializer.read(acquisition_types.Acquisition, record.kinesis.data, function (err, msg) {
+const ssm: SSM = new AWS.SSM({region: 'eu-west-1'});
+const dbConnectionPool: Promise<Pool> =  getParamsFromSSM(ssm).then(createDatabaseConnectionPool);
+
+interface Event {
+    Records: {
+        kinesis: {
+            data: any
+        }
+    }[]
+}
+
+const getReferralCodeFromThriftBytes = (rawThriftData: any): Promise<string | null> =>
+    new Promise((resolve, reject) => {
+        serializer.read(acquisition_types.Acquisition, rawThriftData, function (err, msg) {
             if (err) {
-                console.log("error", err)
+                reject(err);
             }
-            console.log("result", JSON.stringify(msg));
+            console.log("event:", JSON.stringify(msg));
+
+            const referralCodeParam = msg.queryParameters.find(qp => qp.name === 'referralCode');
+            if (!!referralCodeParam && !!referralCodeParam.value) {
+                resolve(referralCodeParam.value as string);
+            } else {
+                resolve(null);
+            }
         });
     });
-    return Promise.resolve(null);
+
+export async function handler(event: Event, context: any): Promise<any> {
+    console.log("events:", JSON.stringify(event));
+    const pool = await dbConnectionPool;
+
+    const maybeReferralCodes: (string | null)[] = await Promise.all(
+        event.Records.map(record => getReferralCodeFromThriftBytes(record.kinesis.data))
+    );
+
+    const resultPromises = maybeReferralCodes
+        .filter(maybeReferralCode => !!maybeReferralCode)
+        .map(referralCode =>
+            fetchReferralData(referralCode, pool)
+                .then((queryResult: QueryResult) => {
+                    // TODO - write to contribution_successful_referrals table and send to Braze
+                    return queryResult.rows
+                })
+        );
+
+    return Promise.all(resultPromises);
 }

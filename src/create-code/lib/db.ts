@@ -1,6 +1,6 @@
 import {Pool, QueryConfig, QueryResult} from 'pg';
-import {logError, logInfo} from '../lib/log';
-import {ReferralCreatedEvent} from "./models";
+import {logError, logInfo} from './log';
+import {ReferralCreatedEvent} from "../lambda/models";
 
 export type DBConfig = {
     username: string,
