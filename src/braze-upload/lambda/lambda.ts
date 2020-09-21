@@ -18,7 +18,7 @@ interface Event {
     }[]
 }
 
-const getReferralCodeFromThriftBytes = (rawThriftData: any): Promise<string> =>
+const getReferralCodeFromThriftBytes = (rawThriftData: any): Promise<string | null> =>
     new Promise((resolve, reject) => {
         serializer.read(acquisition_types.Acquisition, rawThriftData, function (err, msg) {
             if (err) {
@@ -30,7 +30,7 @@ const getReferralCodeFromThriftBytes = (rawThriftData: any): Promise<string> =>
             if (!!referralCodeParam && !!referralCodeParam.value) {
                 resolve(referralCodeParam.value as string);
             } else {
-                reject(new Error('Cannot find referralCode in event'))
+                resolve(null);
             }
         });
     });
@@ -39,14 +39,19 @@ export async function handler(event: Event, context: any): Promise<any> {
     console.log("events:", JSON.stringify(event));
     const pool = await dbConnectionPool;
 
-    const resultPromises = event.Records.map(record =>
-        getReferralCodeFromThriftBytes(record.kinesis.data)
-            .then((referralCode: string) => fetchReferralData(referralCode, pool))
-            .then((queryResult: QueryResult) => {
-                // TODO - write to contribution_successful_referrals table and send to Braze
-                return queryResult.rows
-            })
+    const maybeReferralCodes: (string | null)[] = await Promise.all(
+        event.Records.map(record => getReferralCodeFromThriftBytes(record.kinesis.data))
     );
+
+    const resultPromises = maybeReferralCodes
+        .filter(maybeReferralCode => !!maybeReferralCode)
+        .map(referralCode =>
+            fetchReferralData(referralCode, pool)
+                .then((queryResult: QueryResult) => {
+                    // TODO - write to contribution_successful_referrals table and send to Braze
+                    return queryResult.rows
+                })
+        );
 
     return Promise.all(resultPromises);
 }
