@@ -18,35 +18,35 @@ interface Event {
     }[]
 }
 
+const getReferralCodeFromKinesisRecord = (rawThriftData: any): Promise<string> =>
+    new Promise((resolve, reject) => {
+        serializer.read(acquisition_types.Acquisition, rawThriftData, function (err, msg) {
+            if (err) {
+                reject(err);
+            }
+            console.log("event:", JSON.stringify(msg));
+
+            const referralCodeParam = msg.queryParameters.find(qp => qp.name === 'referralCode');
+            if (!!referralCodeParam && !!referralCodeParam.value) {
+                resolve(referralCodeParam.value as string);
+            } else {
+                reject(new Error('Cannot find referralCode in event'))
+            }
+        });
+    });
+
 export async function handler(event: Event, context: any): Promise<any> {
     console.log("events:", JSON.stringify(event));
     const pool = await dbConnectionPool;
 
-    const resultPromises = event.Records.map(record => {
-        const referralCodePromise: Promise<string> = new Promise((resolve, reject) => {
-            serializer.read(acquisition_types.Acquisition, record.kinesis.data, function (err, msg) {
-                if (err) {
-                    reject(err);
-                }
-                console.log("event:", JSON.stringify(msg));
-
-                const referralCodeParam = msg.queryParameters.find(qp => qp.name === 'referralCode');
-                if (!!referralCodeParam && !!referralCodeParam.value) {
-                    console.log("referralCode", referralCodeParam.value);
-                    resolve(referralCodeParam.value as string);
-                } else {
-                    reject(new Error('Cannot find referralCode in event'))
-                }
-            });
-        });
-
-        return referralCodePromise
+    const resultPromises = event.Records.map(record =>
+        getReferralCodeFromKinesisRecord(record.kinesis.data)
             .then((referralCode: string) => fetchReferralData(referralCode, pool))
             .then((queryResult: QueryResult) => {
                 // TODO - write to contribution_successful_referrals table and send to Braze
                 return queryResult.rows
             })
-    });
+    );
 
     return Promise.all(resultPromises);
 }
