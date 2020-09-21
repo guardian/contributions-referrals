@@ -30,7 +30,8 @@ function queryToString(queryConfig: QueryConfig): string {
 
 export function fetchReferralData(referralCode: string, pool: Pool): Promise<QueryResult> {
     const query: QueryConfig = {
-        text: 'SELECT braze_uuid, campaign_id FROM contribution_referral_codes;',
+        text: 'SELECT braze_uuid, campaign_id FROM contribution_referral_codes WHERE referral_code = $1;',
+        values: [referralCode]
     };
 
     return handleQuery(pool.query(query), query);
