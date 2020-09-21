@@ -1,6 +1,6 @@
 import {DBConfig} from './db';
 import {isProd, isRunningLocally} from './stage';
-// TODO - fix build locally - the node_modules dir needs to be copied to top level
+
 import SSM = require('aws-sdk/clients/ssm');
 
 // locally, if process.env.Stage is not set, it will fetch CODE credentials from SSM
