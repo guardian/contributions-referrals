@@ -7,6 +7,7 @@ import {
     writeSuccessfulReferral
 } from "../lib/db";
 import {getParamsFromSSM} from "../lib/ssm";
+import {sendCampaignIdsToBraze} from "../lib/braze";
 
 const AWS = require('aws-sdk');
 const acquisition_types = require('../gen-nodejs/acquisition_types');
@@ -52,19 +53,19 @@ export async function handler(event: Event, context: any): Promise<any> {
         .filter(maybeReferralCode => !!maybeReferralCode)
         .map(async referralCode => {
             // Fetch the braze uuid
-            const brazeUuidLookupResult: QueryResult = await fetchReferralData(referralCode, pool);
+            const referralDataLookupResult: QueryResult = await fetchReferralData(referralCode, pool);
 
-            const row = brazeUuidLookupResult.rows[0];
-            if (!row) {
+            const referralData = referralDataLookupResult.rows[0];
+            if (!referralData) {
                 return Promise.reject(`No brazeUuid found for referralCode ${referralCode}`);
             }
 
             // Write the successful referral
             const writeResult: QueryResult = await writeSuccessfulReferral(
                 {
-                    brazeUuid: row.braze_uuid,
+                    brazeUuid: referralData.braze_uuid,
                     referralCode: referralCode,
-                    campaignId: row.campaign_id,
+                    campaignId: referralData.campaign_id,
                 },
                 pool
             );
@@ -73,12 +74,14 @@ export async function handler(event: Event, context: any): Promise<any> {
             }
 
             // Fetch the distinct set of campaignIds for this braze user
-            const campaignIdsResult: QueryResult = await fetchCampaignIds(row.braze_uuid, pool);
+            const campaignIdsResult: QueryResult = await fetchCampaignIds(referralData.braze_uuid, pool);
             if (campaignIdsResult.rows.length <= 0) {
-                return Promise.reject(`No campaignIds found for brazeUuid ${row.braze_uuid}`);
+                return Promise.reject(`No campaignIds found for brazeUuid ${referralData.braze_uuid}`);
             }
 
-            return campaignIdsResult.rows.map(row => row.campaign_id);
+            const campaignIds = campaignIdsResult.rows.map(row => row.campaign_id);
+
+            return sendCampaignIdsToBraze(campaignIds, referralData.braze_uuid);
         });
 
     return Promise.all(resultPromises);
