@@ -23,6 +23,8 @@ interface Event {
     }[]
 }
 
+const referralCodePattern = /^[a-zA-Z0-9]*$/;
+
 const getReferralCodeFromThriftBytes = (rawThriftData: any): Promise<string | null> =>
     new Promise((resolve, reject) => {
         serializer.read(acquisition_types.Acquisition, rawThriftData, function (err, msg) {
@@ -32,7 +34,10 @@ const getReferralCodeFromThriftBytes = (rawThriftData: any): Promise<string | nu
             console.log("event:", JSON.stringify(msg));
 
             const referralCodeParam = msg.queryParameters.find(qp => qp.name === 'referralCode');
-            if (!!referralCodeParam && !!referralCodeParam.value) {
+            if (!!referralCodeParam &&
+                !!referralCodeParam.value &&
+                referralCodePattern.test(referralCodeParam.value)
+            ) {
                 resolve(referralCodeParam.value as string);
             } else {
                 resolve(null);

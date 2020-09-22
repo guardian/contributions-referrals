@@ -55,8 +55,15 @@ function resolveBrazeUuid(event: any): Promise<ReferralCreatedEvent | null> {
     }
 }
 
+const referralCodePattern = /^[a-zA-Z0-9]*$/;
+
 function validate(event: any): ReferralCreatedEvent | null {
-    if (!!event.code && !!event.brazeUuid && !!event.source && !!event.campaignId) {
+    if (!!event.code &&
+        referralCodePattern.test(event.code) &&
+        !!event.brazeUuid &&
+        !!event.source &&
+        !!event.campaignId
+    ) {
         return event
     } else {
         logWarning('Failed to parse event: ', event);
