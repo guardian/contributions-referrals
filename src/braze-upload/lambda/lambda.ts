@@ -1,6 +1,11 @@
 import {Pool, QueryResult} from "pg";
 import SSM = require("aws-sdk/clients/ssm");
-import {createDatabaseConnectionPool, fetchReferralData} from "../lib/db";
+import {
+    createDatabaseConnectionPool,
+    fetchReferralData,
+    fetchCampaignIds,
+    writeSuccessfulReferral
+} from "../lib/db";
 import {getParamsFromSSM} from "../lib/ssm";
 
 const AWS = require('aws-sdk');
@@ -45,13 +50,36 @@ export async function handler(event: Event, context: any): Promise<any> {
 
     const resultPromises = maybeReferralCodes
         .filter(maybeReferralCode => !!maybeReferralCode)
-        .map(referralCode =>
-            fetchReferralData(referralCode, pool)
-                .then((queryResult: QueryResult) => {
-                    // TODO - write to contribution_successful_referrals table and send to Braze
-                    return queryResult.rows
-                })
-        );
+        .map(async referralCode => {
+            // Fetch the braze uuid
+            const brazeUuidLookupResult: QueryResult = await fetchReferralData(referralCode, pool);
+
+            const row = brazeUuidLookupResult.rows[0];
+            if (!row) {
+                return Promise.reject(`No brazeUuid found for referralCode ${referralCode}`);
+            }
+
+            // Write the successful referral
+            const writeResult: QueryResult = await writeSuccessfulReferral(
+                {
+                    brazeUuid: row.braze_uuid,
+                    referralCode: referralCode,
+                    campaignId: row.campaign_id,
+                },
+                pool
+            );
+            if (writeResult.rows.length <= 0) {
+                return Promise.reject(`Failed to write successful referral for code ${referralCode}`);
+            }
+
+            // Fetch the distinct set of campaignIds for this braze user
+            const campaignIdsResult: QueryResult = await fetchCampaignIds(row.braze_uuid, pool);
+            if (campaignIdsResult.rows.length <= 0) {
+                return Promise.reject(`No campaignIds found for brazeUuid ${row.braze_uuid}`);
+            }
+
+            return campaignIdsResult.rows.map(row => row.campaign_id);
+        });
 
     return Promise.all(resultPromises);
 }
