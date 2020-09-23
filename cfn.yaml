@@ -62,7 +62,7 @@ Resources:
           Stage: !Ref Stage
       CodeUri:
         Bucket: !Ref DeployBucket
-        Key: !Sub ${Stack}/${Stage}/contributions-referrals-create-code/contributions-referrals-create-code.zip
+        Key: !Sub ${Stack}/${Stage}/contributions-referrals/contributions-referrals.zip
       VpcConfig:
         SecurityGroupIds:
           - !Ref SecurityGroupToAccessPostgres
@@ -101,7 +101,7 @@ Resources:
           Stage: !Ref Stage
       CodeUri:
         Bucket: !Ref DeployBucket
-        Key: !Sub ${Stack}/${Stage}/contributions-referrals-braze-upload/contributions-referrals-braze-upload.zip
+        Key: !Sub ${Stack}/${Stage}/contributions-referrals/contributions-referrals.zip
       VpcConfig:
         SecurityGroupIds:
           - !Ref SecurityGroupToAccessPostgres
