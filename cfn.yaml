@@ -23,6 +23,9 @@ Parameters:
   VpcSubnets:
     Description: Subnets for RDS access
     Type: List<AWS::EC2::Subnet::Id>
+  StreamArn:
+    Description: ARN of the kinesis stream
+    Type: String
 
 Mappings:
   StageMap:
