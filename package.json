@@ -1,7 +1,7 @@
 {
   "name": "contributions-referrals",
   "isAwsLambda": true,
-  "cloudformation": "./cfn.yaml",
+  "cloudformation": "../cfn.yaml",
   "projectName": "Contributions::contributions-referrals",
   "buildDir": "./target",
   "riffraffFile": "./riff-raff.yaml",
