@@ -14,7 +14,7 @@ async function run() {
     process.env.Stage = 'DEV';
 
     try {
-        const fileContents = fs.readFileSync('./test-event.json', 'utf8');
+        const fileContents = fs.readFileSync('./src/braze-upload/test-event.json', 'utf8');
         const input = JSON.parse(fileContents);
 
         await handler(input, null)

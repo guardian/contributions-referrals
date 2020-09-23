@@ -27,13 +27,13 @@ const referralCodePattern = /^[a-zA-Z0-9]*$/;
 
 const getReferralCodeFromThriftBytes = (rawThriftData: any): Promise<string | null> =>
     new Promise((resolve, reject) => {
-        serializer.read(acquisition_types.Acquisition, rawThriftData, function (err, msg) {
+        serializer.read(acquisition_types.Acquisition, rawThriftData, function (err: any, msg: any) {
             if (err) {
                 reject(err);
             }
             console.log("event:", JSON.stringify(msg));
 
-            const referralCodeParam = msg.queryParameters.find(qp => qp.name === 'referralCode');
+            const referralCodeParam = msg.queryParameters.find((qp: any) => qp.name === 'referralCode');
             if (!!referralCodeParam &&
                 !!referralCodeParam.value &&
                 referralCodePattern.test(referralCodeParam.value)
@@ -55,7 +55,8 @@ export async function handler(event: Event, context: any): Promise<any> {
 
     const resultPromises = maybeReferralCodes
         .filter(maybeReferralCode => !!maybeReferralCode)
-        .map(async referralCode => {
+        .map(c => c as string)  //
+        .map(async (referralCode: string) => {
             // Fetch the braze uuid
             const brazeUuidLookupResult: QueryResult = await fetchReferralData(referralCode, pool);
 

@@ -84,6 +84,43 @@ Resources:
             Path: '/referral'
             Method: post
 
+  BrazeUploadLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub contributions-referrals-braze-upload-${Stage}
+      Description: The lambda to send referrals data to Braze
+      Runtime: nodejs10.x
+      Handler: lambda/lambda.handler
+      MemorySize: 128
+      Timeout: 30
+      Environment:
+        Variables:
+          Stage: !Ref Stage
+      CodeUri:
+        Bucket: !Ref DeployBucket
+        Key: !Sub ${Stack}/${Stage}/contributions-referrals-braze-upload/contributions-referrals-braze-upload.zip
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref SecurityGroupToAccessPostgres
+        SubnetIds: !Ref VpcSubnets
+      Policies:
+        # there are some extra permissions needed for a lambda to access resources in a VPC
+        # https://docs.aws.amazon.com/lambda/latest/dg/vpc.html
+        # hence this role rather than BasicExecutionRole
+        - AWSLambdaVPCAccessExecutionRole
+        - Statement:
+            Effect: Allow
+            Action:
+              - ssm:GetParametersByPath
+            Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/contributions-referrals/db-config/${Stage}
+      Events:
+        Stream:
+          Type: Kinesis
+          Properties:
+            Stream: !Ref StreamArn
+            BatchSize: 10
+            StartingPosition: LATEST
+
   DomainName:
     Type: "AWS::ApiGateway::DomainName"
     Properties:
