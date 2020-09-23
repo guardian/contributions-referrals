@@ -1,0 +1,29 @@
+{
+  "name": "contributions-referrals-referral-count",
+  "isAwsLambda": true,
+  "cloudformation": "../cfn.yaml",
+  "projectName": "Contributions::contributions-referrals-referral-count",
+  "buildDir": "./target",
+  "riffraffFile": "./riff-raff.yaml",
+  "dependencies": {
+    "@types/aws-sdk": "^2.7.0",
+    "@types/pg": "^7.4.14",
+    "@types/pg-format": "^1.0.0",
+    "node-fetch": "^2.1.2",
+    "aws-sdk": "^2.264.1",
+    "pg": "^7.9.0",
+    "pg-format": "^1.0.4",
+    "typescript": "2.8.3"
+  },
+  "devDependencies": {
+    "@types/node": "10.14.22",
+    "@types/node-fetch": "^1.6.9",
+    "node-riffraff-artefact": "^2.0.1"
+  },
+  "scripts": {
+    "clean": "rm -rf target",
+    "build": "node_modules/.bin/tsc",
+    "local": "npm run build && node target/lambda/local.js",
+    "package": "ARTEFACT_PATH=$PWD/target VERBOSE=true riffraff-artefact"
+  }
+}

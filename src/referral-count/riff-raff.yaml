@@ -1,0 +1,18 @@
+stacks: [support]
+regions: [eu-west-1]
+
+deployments:
+  contributions-referrals-referral-count:
+    type: aws-lambda
+    parameters:
+      prefixStack: false
+      bucket: membership-dist
+      fileName: contributions-referrals-referral-count.zip
+      functionNames:
+        - contributions-referrals-referral-count-
+    dependencies: [contributions-referrals-referral-count-cloudformation]
+  contributions-referrals-referral-count-cloudformation:
+    type: cloud-formation
+    app: contributions-referrals-referral-count
+    parameters:
+      templatePath: cloudformation/cfn.yaml

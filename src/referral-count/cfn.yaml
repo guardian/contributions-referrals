@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 Transform: 'AWS::Serverless-2016-10-31'
-Description: The lambda to write referral codes to RDS
+Description: Lambda for fetching referral counts for braze users
 
 Parameters:
   Stack:
@@ -51,7 +51,7 @@ Resources:
   WriteReferralToRdsLambda:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub contributions-referrals-create-code-${Stage}
+      FunctionName: !Sub contributions-referrals-referral-count-${Stage}
       Description: A lambda for saving referral codes to rds
       Runtime: nodejs10.x
       Handler: lambda/lambda.handler
@@ -62,7 +62,7 @@ Resources:
           Stage: !Ref Stage
       CodeUri:
         Bucket: !Ref DeployBucket
-        Key: !Sub ${Stack}/${Stage}/contributions-referrals-create-code/contributions-referrals-create-code.zip
+        Key: !Sub ${Stack}/${Stage}/contributions-referrals-referral-count/contributions-referrals-referral-count.zip
       VpcConfig:
         SecurityGroupIds:
           - !Ref SecurityGroupToAccessPostgres
@@ -79,13 +79,12 @@ Resources:
               - ssm:GetParameter
             Resource:
               - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/contributions-referrals/db-config/${Stage}
-              - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/contributions-referrals/idapi/${Stage}/*
       Events:
         HttpPost:
           Type: Api
           Properties:
-            Path: '/referral'
-            Method: post
+            Path: '/count'
+            Method: get
 
   DomainName:
     Type: "AWS::ApiGateway::DomainName"
@@ -115,22 +114,3 @@ Resources:
       TTL: '120'
       ResourceRecords:
         - !GetAtt [ DomainName, RegionalDomainName ]
-
-  WriteReferralToRdsAlarm:
-    Type: AWS::CloudWatch::Alarm
-    Condition: IsProd
-    Properties:
-      AlarmActions:
-        - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:contributions-dev
-      AlarmName: !Sub Referral write to rds failed in ${Stage}
-      AlarmDescription: Users referral code is not being stored
-      MetricName: ExecutionsFailed
-      Namespace: AWS/Lambda
-      Dimensions:
-        - Name: FunctionName
-          Value: !Ref WriteReferralToRdsLambda
-      ComparisonOperator: GreaterThanThreshold
-      Threshold: 1
-      Period: 600
-      EvaluationPeriods: 1
-      Statistic: Sum
