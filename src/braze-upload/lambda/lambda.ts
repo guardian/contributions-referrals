@@ -56,7 +56,7 @@ export async function handler(event: Event, context: any): Promise<any> {
 
     const resultPromises = maybeReferralCodes
         .filter(maybeReferralCode => !!maybeReferralCode)
-        .map(c => c as string)  //
+        .map(c => c as string)  // typescript doesn't know that the above line filters to strings only
         .map(async (referralCode: string) => {
             // Fetch the braze uuid
             const referralDataLookupResult: QueryResult = await fetchReferralData(referralCode, pool);
