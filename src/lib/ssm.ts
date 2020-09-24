@@ -1,12 +1,12 @@
-import {DBConfig} from './db';
 import {isProd, isRunningLocally} from './stage';
 
 import SSM = require('aws-sdk/clients/ssm');
+import {DBConfig} from "./db";
 
 // locally, if process.env.Stage is not set, it will fetch CODE credentials from SSM
 export const ssmStage = isProd() ? 'PROD' : 'CODE';
 
-export async function getParamsFromSSM(ssm: SSM): Promise<DBConfig> {
+export async function getDatabaseParamsFromSSM(ssm: SSM): Promise<DBConfig> {
     const dbPath = `/contributions-referrals/db-config/${ssmStage}`;
 
     const ssmResponse = await ssm.getParametersByPath({

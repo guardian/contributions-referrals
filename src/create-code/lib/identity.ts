@@ -1,6 +1,6 @@
 import fetch from "node-fetch";
 import {Response as FetchResponse} from "node-fetch";
-import {isProd} from "../lib/stage";
+import {isProd} from "../../lib/stage";
 
 const idapiBaseUrl = isProd() ? "https://idapi.theguardian.com" : "https://idapi.code.dev-theguardian.com";
 

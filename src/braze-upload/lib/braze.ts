@@ -1,4 +1,4 @@
-import {getParamFromSSM, ssmStage} from "./ssm";
+import {getParamFromSSM, ssmStage} from "../../lib/ssm";
 import SSM = require("aws-sdk/clients/ssm");
 
 const AWS = require('aws-sdk');
