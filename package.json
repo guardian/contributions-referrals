@@ -1,8 +1,8 @@
 {
-  "name": "contributions-referrals-create-code",
+  "name": "contributions-referrals",
   "isAwsLambda": true,
   "cloudformation": "../cfn.yaml",
-  "projectName": "Contributions::contributions-referrals-create-code",
+  "projectName": "Contributions::contributions-referrals",
   "buildDir": "./target",
   "riffraffFile": "./riff-raff.yaml",
   "dependencies": {
@@ -11,9 +11,11 @@
     "@types/pg-format": "^1.0.0",
     "node-fetch": "^2.1.2",
     "aws-sdk": "^2.264.1",
+    "moment": "2.22.2",
+    "thrift-serializer": "^1.1.0",
+    "typescript": "2.8.3",
     "pg": "^7.9.0",
-    "pg-format": "^1.0.4",
-    "typescript": "2.8.3"
+    "pg-format": "^1.0.4"
   },
   "devDependencies": {
     "@types/node": "10.14.22",
@@ -22,8 +24,9 @@
   },
   "scripts": {
     "clean": "rm -rf target",
-    "build": "node_modules/.bin/tsc",
-    "local": "npm run build && node target/lambda/local.js",
+    "build": "tsc",
+    "braze-upload-local": "npm run build && node target/braze-upload/lambda/local.js",
+    "create-code-local": "npm run build && node target/create-code/lambda/local.js",
     "package": "ARTEFACT_PATH=$PWD/target VERBOSE=true riffraff-artefact"
   }
 }

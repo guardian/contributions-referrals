@@ -20,7 +20,7 @@ const credentials = new AWS.SharedIniFileCredentials({profile: 'membership'});
 AWS.config.credentials = credentials;
 AWS.config.region = 'eu-west-1';
 
-const dummyInputFile = './dummy-input.txt';
+const dummyInputFile = './src/create-code/dummy-input.txt';
 
 async function run() {
     process.env.Stage = 'DEV';
