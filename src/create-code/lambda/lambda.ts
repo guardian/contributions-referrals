@@ -1,18 +1,13 @@
 import SSM = require('aws-sdk/clients/ssm');
-import {Pool, QueryConfig} from 'pg';
+import {Pool} from 'pg';
 
-import {
-    createDatabaseConnectionPool,
-    handleQuery,
-    QueryRes,
-    QuerySuccess,
-    referralCreatedEventToQueryConfig
-} from '../lib/db';
-import {getDatabaseParamsFromSSM, getParamFromSSM, ssmStage} from '../lib/ssm';
-import {logError, logInfo, logWarning} from '../lib/log';
-import {isRunningLocally} from "../lib/stage";
-import {ReferralCreatedEvent} from "./models";
-import {getBrazeUuidByEmail} from "./identity";
+import {writeReferralCode} from '../lib/db';
+import {getDatabaseParamsFromSSM, getParamFromSSM, ssmStage} from '../../lib/ssm';
+import {logError, logInfo, logWarning} from '../../lib/log';
+import {isRunningLocally} from "../../lib/stage";
+import {ReferralCreatedEvent} from "../lib/models";
+import {getBrazeUuidByEmail} from "../lib/identity";
+import {createDatabaseConnectionPool} from "../../lib/db";
 
 const headers = {
     "Content-Type": "application/json",
@@ -77,16 +72,10 @@ const badRequest = {
     body: JSON.stringify('Bad Request')
 };
 
-export function isQuerySuccess(res: QueryRes): res is QuerySuccess {
-    return Object.keys(res).some(k => k === 'success');
-}
-
 async function persist(referralEvent: ReferralCreatedEvent): Promise<object> {
-    const newQueryConfig: QueryConfig = referralCreatedEventToQueryConfig(referralEvent);
-    const queryResult = await dbConnectionPool.then(cp => handleQuery(cp.query(newQueryConfig), newQueryConfig));
-    const isPersisted = isQuerySuccess(queryResult);
+    const queryResult = await dbConnectionPool.then(pool => writeReferralCode(referralEvent, pool));
 
-    if (isPersisted) {
+    if (queryResult.rows.length > 0) {
         return res
     } else {
         logError('Failed to persist: ', queryResult);

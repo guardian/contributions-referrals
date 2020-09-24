@@ -1,20 +1,20 @@
 import {Pool, QueryResult} from "pg";
 import SSM = require("aws-sdk/clients/ssm");
 import {
-    createDatabaseConnectionPool,
     fetchReferralData,
     fetchCampaignIds,
     writeSuccessfulReferral
 } from "../lib/db";
-import {getParamsFromSSM} from "../lib/ssm";
+import {getDatabaseParamsFromSSM} from "../../lib/ssm";
 import {sendCampaignIdsToBraze} from "../lib/braze";
+import {createDatabaseConnectionPool} from "../../lib/db";
 
 const AWS = require('aws-sdk');
 const acquisition_types = require('../gen-nodejs/acquisition_types');
 const serializer = require('thrift-serializer');
 
 const ssm: SSM = new AWS.SSM({region: 'eu-west-1'});
-const dbConnectionPool: Promise<Pool> =  getParamsFromSSM(ssm).then(createDatabaseConnectionPool);
+const dbConnectionPool: Promise<Pool> =  getDatabaseParamsFromSSM(ssm).then(createDatabaseConnectionPool);
 
 interface Event {
     Records: {
