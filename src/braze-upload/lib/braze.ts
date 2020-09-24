@@ -6,7 +6,7 @@ const ssm: SSM = new AWS.SSM({region: 'eu-west-1'});
 
 const brazeEndpoint = "https://rest.fra-01.braze.eu/users/track";
 
-const brazeKey: Promise<string> = getParamFromSSM(ssm, `contributions-referrals/braze/${ssmStage}/api-key`);
+const brazeKey: Promise<string> = getParamFromSSM(ssm, `/contributions-referrals/braze/${ssmStage}/api-key`);
 
 export const sendCampaignIdsToBraze = (campaignIds: string[], brazeUuid: string): Promise<any> => {
     const requestBody = {
