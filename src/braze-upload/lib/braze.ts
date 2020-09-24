@@ -1,5 +1,6 @@
 import {getParamFromSSM, ssmStage} from "../../lib/ssm";
 import SSM = require("aws-sdk/clients/ssm");
+import fetch from "node-fetch";
 
 const AWS = require('aws-sdk');
 const ssm: SSM = new AWS.SSM({region: 'eu-west-1'});
