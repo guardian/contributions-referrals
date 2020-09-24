@@ -48,7 +48,7 @@ Globals:
 
 Resources:
 
-  WriteReferralToRdsLambda:
+  WriteReferralCodeToRdsLambda:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub contributions-referrals-create-code-${Stage}
@@ -84,7 +84,7 @@ Resources:
         HttpPost:
           Type: Api
           Properties:
-            Path: '/referral'
+            Path: '/referral-code'
             Method: post
 
   BrazeUploadLambda:
@@ -153,7 +153,7 @@ Resources:
       ResourceRecords:
         - !GetAtt [ DomainName, RegionalDomainName ]
 
-  WriteReferralToRdsAlarm:
+  WriteReferralCodeToRdsAlarm:
     Type: AWS::CloudWatch::Alarm
     Condition: IsProd
     Properties:
@@ -165,7 +165,7 @@ Resources:
       Namespace: AWS/Lambda
       Dimensions:
         - Name: FunctionName
-          Value: !Ref WriteReferralToRdsLambda
+          Value: !Ref WriteReferralCodeToRdsLambda
       ComparisonOperator: GreaterThanThreshold
       Threshold: 1
       Period: 600
