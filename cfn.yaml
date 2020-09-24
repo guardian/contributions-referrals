@@ -26,6 +26,9 @@ Parameters:
   StreamArn:
     Description: ARN of the kinesis stream
     Type: String
+  CertificateArn:
+    Description: ARN of the certificate
+    Type: String
 
 Mappings:
   StageMap:
@@ -128,7 +131,7 @@ Resources:
     Type: "AWS::ApiGateway::DomainName"
     Properties:
       RegionalCertificateArn: # only for *.support.guardianapis.com
-        !Sub arn:aws:acm:${AWS::Region}:${AWS::AccountId}:certificate/b384a6a0-2f54-4874-b99b-96eeff96c009
+        !Ref CertificateArn
       DomainName: !FindInMap [ StageMap, !Ref Stage, DomainName ]
       EndpointConfiguration:
         Types:
