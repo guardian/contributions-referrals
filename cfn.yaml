@@ -90,6 +90,44 @@ Resources:
             Path: '/referral-code'
             Method: post
 
+  ReferralCountLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub contributions-referrals-referral-count-${Stage}
+      Description: A lambda for fetching a referral count for a braze user
+      Runtime: nodejs10.x
+      Handler: referral-count/lambda/lambda.handler
+      MemorySize: 128
+      Timeout: 30
+      Environment:
+        Variables:
+          Stage: !Ref Stage
+      CodeUri:
+        Bucket: !Ref DeployBucket
+        Key: !Sub ${Stack}/${Stage}/contributions-referrals/contributions-referrals.zip
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref SecurityGroupToAccessPostgres
+        SubnetIds: !Ref VpcSubnets
+      Policies:
+        # there are some extra permissions needed for a lambda to access resources in a VPC
+        # https://docs.aws.amazon.com/lambda/latest/dg/vpc.html
+        # hence this role rather than BasicExecutionRole
+        - AWSLambdaVPCAccessExecutionRole
+        - Statement:
+            Effect: Allow
+            Action:
+              - ssm:GetParametersByPath
+              - ssm:GetParameter
+            Resource:
+              - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/contributions-referrals/db-config/${Stage}
+      Events:
+        HttpGet:
+          Type: Api
+          Properties:
+            Path: '/referral-count'
+            Method: get
+
   BrazeUploadLambda:
     Type: AWS::Serverless::Function
     Properties:

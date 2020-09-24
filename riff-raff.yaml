@@ -11,6 +11,7 @@ deployments:
       functionNames:
         - contributions-referrals-braze-upload-
         - contributions-referrals-create-code-
+        - contributions-referrals-referral-count-
     dependencies: [contributions-referrals-cloudformation]
   contributions-referrals-cloudformation:
     type: cloud-formation
