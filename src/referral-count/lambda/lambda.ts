@@ -18,7 +18,7 @@ const headers = {
 };
 
 function parseRequest(request: any): ReferralCountRequest | null {
-    const timestamp = Date.parse(request.fromDate);     // TODO - what is braze sending?
+    const timestamp = Date.parse(request.fromDate);
     if (request.brazeUuid && request.campaignId && !isNaN(timestamp)) {
         return {
             brazeUuid: request.brazeUuid,
