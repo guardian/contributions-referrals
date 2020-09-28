@@ -4,9 +4,11 @@ import {isProd} from "../../lib/stage";
 
 const idapiBaseUrl = isProd() ? "https://idapi.theguardian.com" : "https://idapi.code.dev-theguardian.com";
 
+const encodeEmail = (email: string): string => encodeURI(email).replace('+', '%2B');
+
 export function getBrazeUuidByEmail(email: string, accessToken: string): Promise<string> {
     return fetch(
-        `${idapiBaseUrl}/user?emailAddress=${encodeURI(email)}`,
+        `${idapiBaseUrl}/user?emailAddress=${encodeEmail(email)}`,
         {headers: {"X-GU-ID-Client-Access-Token": `Bearer ${accessToken}`}}
         ).then((response: FetchResponse) => {
             if (response.status == 404) {
