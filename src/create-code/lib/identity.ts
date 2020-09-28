@@ -6,7 +6,7 @@ const idapiBaseUrl = isProd() ? "https://idapi.theguardian.com" : "https://idapi
 
 export function getBrazeUuidByEmail(email: string, accessToken: string): Promise<string> {
     return fetch(
-        `${idapiBaseUrl}/user?emailAddress=${email}`,
+        `${idapiBaseUrl}/user?emailAddress=${encodeURI(email)}`,
         {headers: {"X-GU-ID-Client-Access-Token": `Bearer ${accessToken}`}}
         ).then((response: FetchResponse) => {
             if (response.status == 404) {
