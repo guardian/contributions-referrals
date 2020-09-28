@@ -27,6 +27,7 @@
     "build": "tsc",
     "braze-upload-local": "npm run build && node target/braze-upload/lambda/local.js",
     "create-code-local": "npm run build && node target/create-code/lambda/local.js",
+    "referral-count-local": "npm run build && node target/referral-count/lambda/local.js",
     "package": "ARTEFACT_PATH=$PWD/target VERBOSE=true riffraff-artefact"
   }
 }
