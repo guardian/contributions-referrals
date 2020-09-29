@@ -8,6 +8,7 @@ import {
 import {getDatabaseParamsFromSSM} from "../../lib/ssm";
 import {sendCampaignIdsToBraze} from "../lib/braze";
 import {createDatabaseConnectionPool} from "../../lib/db";
+import {logInfo} from "../../lib/log";
 
 const AWS = require('aws-sdk');
 const acquisition_types = require('../gen-nodejs/acquisition_types');
@@ -32,7 +33,6 @@ const getReferralCodeFromThriftBytes = (rawThriftData: any): Promise<string | nu
             if (err) {
                 reject(err);
             }
-            console.log("event:", JSON.stringify(msg));
 
             const referralCodeParam = msg.queryParameters.find((qp: any) => qp.name === 'referralCode');
             if (!!referralCodeParam &&
@@ -47,7 +47,6 @@ const getReferralCodeFromThriftBytes = (rawThriftData: any): Promise<string | nu
     });
 
 export async function handler(event: Event, context: any): Promise<any> {
-    console.log("events:", JSON.stringify(event));
     const pool = await dbConnectionPool;
 
     const maybeReferralCodes: (string | null)[] = await Promise.all(
@@ -58,6 +57,8 @@ export async function handler(event: Event, context: any): Promise<any> {
         .filter(maybeReferralCode => !!maybeReferralCode)
         .map(c => c as string)  // typescript doesn't know that the above line filters to strings only
         .map(async (referralCode: string) => {
+            logInfo(`Processing referralCode ${referralCode}`);
+
             // Fetch the braze uuid
             const referralDataLookupResult: QueryResult = await fetchReferralData(referralCode, pool);
 
