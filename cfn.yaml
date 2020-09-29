@@ -235,13 +235,51 @@ Resources:
     Properties:
       AlarmActions:
         - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:contributions-dev
-      AlarmName: !Sub Referral write to rds failed in ${Stage}
-      AlarmDescription: Users referral code is not being stored
+      AlarmName: Failed to write a referral code to the database
+      AlarmDescription: User's referral code is not being stored
       MetricName: ExecutionsFailed
       Namespace: AWS/Lambda
       Dimensions:
         - Name: FunctionName
           Value: !Ref WriteReferralCodeToRdsLambda
+      ComparisonOperator: GreaterThanThreshold
+      Threshold: 1
+      Period: 600
+      EvaluationPeriods: 1
+      Statistic: Sum
+
+  BrazeUploadAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: IsProd
+    Properties:
+      AlarmActions:
+        - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:contributions-dev
+      AlarmName: Failed to process successful referral
+      AlarmDescription: Referral may not have been recorded
+      MetricName: ExecutionsFailed
+      Namespace: AWS/Lambda
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref BrazeUploadLambda
+      ComparisonOperator: GreaterThanThreshold
+      Threshold: 1
+      Period: 600
+      EvaluationPeriods: 1
+      Statistic: Sum
+
+  ReferralCountAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: IsProd
+    Properties:
+      AlarmActions:
+        - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:contributions-dev
+      AlarmName: Request for a referral count failed
+      AlarmDescription: Braze was unable to fetch a referral count
+      MetricName: ExecutionsFailed
+      Namespace: AWS/Lambda
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref ReferralCountLambda
       ComparisonOperator: GreaterThanThreshold
       Threshold: 1
       Period: 600
