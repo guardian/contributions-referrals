@@ -26,7 +26,6 @@ const identityAccessToken: Promise<string> =
     getParamFromSSM(ssm, `/contributions-referrals/idapi/${ssmStage}/accessToken`);
 
 export async function handler(event: any, context: any): Promise<object> {
-    logInfo('event: ', event);
     const parsedEvent = isRunningLocally() ? event : JSON.parse(event.body);
     logInfo('parsed: ', parsedEvent);
 

@@ -55,13 +55,13 @@ function processRequest(params: ReferralCountRequest, pool: Pool): Promise<ApiGa
 }
 
 export async function handler(event: any, context: any): Promise<ApiGatewayResponse> {
-    logInfo('event: ', event);
     const params = parseRequest(event.queryStringParameters);
     logInfo('parsed: ', params);
 
     if (params) {
         return dbConnectionPoolPromise.then(pool => processRequest(params, pool));
     } else {
+        logError(`Failed to parse params: ${event.queryStringParameters}`);
         return {
             statusCode: 400,
             body: "Invalid request",
