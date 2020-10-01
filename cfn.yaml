@@ -169,6 +169,7 @@ Resources:
             Stream: !Ref StreamArn
             BatchSize: 10
             StartingPosition: LATEST
+            MaximumRetryAttempts: 0
 
   DomainName:
     Type: "AWS::ApiGateway::DomainName"
