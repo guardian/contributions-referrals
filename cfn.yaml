@@ -238,7 +238,7 @@ Resources:
         - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:contributions-dev
       AlarmName: Failed to write a referral code to the database
       AlarmDescription: User's referral code is not being stored
-      MetricName: ExecutionsFailed
+      MetricName: Errors
       Namespace: AWS/Lambda
       Dimensions:
         - Name: FunctionName
@@ -257,7 +257,7 @@ Resources:
         - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:contributions-dev
       AlarmName: Failed to process successful referral
       AlarmDescription: Referral may not have been recorded
-      MetricName: ExecutionsFailed
+      MetricName: Errors
       Namespace: AWS/Lambda
       Dimensions:
         - Name: FunctionName
@@ -276,7 +276,7 @@ Resources:
         - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:contributions-dev
       AlarmName: Request for a referral count failed
       AlarmDescription: Braze was unable to fetch a referral count
-      MetricName: ExecutionsFailed
+      MetricName: Errors
       Namespace: AWS/Lambda
       Dimensions:
         - Name: FunctionName
