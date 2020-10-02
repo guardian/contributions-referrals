@@ -29,10 +29,13 @@ const referralCodePattern = /^[a-zA-Z0-9]*$/;
 
 const getReferralCodeFromThriftBytes = (rawThriftData: any): Promise<string | null> =>
     new Promise((resolve, reject) => {
+        logInfo(`Received: ${rawThriftData}`);
         serializer.read(acquisition_types.Acquisition, rawThriftData, function (err: any, msg: any) {
             if (err) {
                 reject(err);
             }
+
+            logInfo(`queryParameters: ${msg.queryParameters}`);
 
             const referralCodeParam = msg.queryParameters.find((qp: any) => qp.name === 'referralCode');
             if (!!referralCodeParam &&
