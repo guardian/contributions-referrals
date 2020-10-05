@@ -34,7 +34,7 @@ const getReferralCodeFromThriftBytes = (rawThriftData: any): Promise<string | nu
                 reject(err);
             }
 
-            const referralCodeParam = msg.queryParameters.find((qp: any) => qp.name === 'referralCode');
+            const referralCodeParam = msg.queryParameters && msg.queryParameters.find((qp: any) => qp.name === 'referralCode');
             if (!!referralCodeParam &&
                 !!referralCodeParam.value &&
                 referralCodePattern.test(referralCodeParam.value)
