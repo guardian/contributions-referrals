@@ -1,0 +1,14 @@
+2020-10-05T14:07:12.357Z START RequestId: bed75ea5-8b1f-4d85-9934-533ebd3d8886 Version: $LATEST
+
+2020-10-05T14:07:12.378Z 2020-10-05T14:07:12.378Z	bed75ea5-8b1f-4d85-9934-533ebd3d8886	INFO	[INFO] parsed:  { code: '1601906884794524',
+  brazeUuid: 'c619c3da-foob-arba-zbim-082854dc77c7',
+  source: 'email',
+  campaignId: 'enviro_moment_2020' }
+
+2020-10-05T14:07:13.095Z 2020-10-05T14:07:13.094Z	bed75ea5-8b1f-4d85-9934-533ebd3d8886	ERROR	Unhandled Promise Rejection	{"errorType":"Runtime.UnhandledPromiseRejection","errorMessage":"ThrottlingException: Rate exceeded","reason":{"errorType":"ThrottlingException","errorMessage":"Rate exceeded","code":"ThrottlingException","message":"Rate exceeded","time":"2020-10-05T14:07:13.093Z","requestId":"500db759-0a57-4cff-842a-ff0708fe239e","statusCode":400,"retryable":true,"stack":["ThrottlingException: Rate exceeded","    at Request.extractError (/var/task/node_modules/aws-sdk/lib/protocol/json.js:52:27)","    at Request.callListeners (/var/task/node_modules/aws-sdk/lib/sequential_executor.js:106:20)","    at Request.emit (/var/task/node_modules/aws-sdk/lib/sequential_executor.js:78:10)","    at Request.emit (/var/task/node_modules/aws-sdk/lib/request.js:688:14)","    at Request.transition (/var/task/node_modules/aws-sdk/lib/request.js:22:10)","    at AcceptorStateMachine.runTo (/var/task/node_modules/aws-sdk/lib/state_machine.js:14:12)","    at /var/task/node_modules/aws-sdk/lib/state_machine.js:26:10","    at Request.<anonymous> (/var/task/node_modules/aws-sdk/lib/request.js:38:9)","    at Request.<anonymous> (/var/task/node_modules/aws-sdk/lib/request.js:690:12)","    at Request.callListeners (/var/task/node_modules/aws-sdk/lib/sequential_executor.js:116:18)"]},"promise":{},"stack":["Runtime.UnhandledPromiseRejection: ThrottlingException: Rate exceeded","    at process.on (/var/runtime/index.js:37:15)","    at process.emit (events.js:198:13)","    at process.EventEmitter.emit (domain.js:448:20)","    at emitPromiseRejectionWarnings (internal/process/promises.js:140:18)","    at process._tickCallback (internal/process/next_tick.js:69:34)"]}
+
+2020-10-05T14:07:13.292Z END RequestId: bed75ea5-8b1f-4d85-9934-533ebd3d8886
+
+2020-10-05T14:07:13.292Z REPORT RequestId: bed75ea5-8b1f-4d85-9934-533ebd3d8886	Duration: 934.50 ms	Billed Duration: 1000 ms	Memory Size: 128 MB	Max Memory Used: 92 MB	Init Duration: 599.24 ms
+
+2020-10-05T14:07:13.292Z Unknown application error occurred
