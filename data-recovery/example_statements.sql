@@ -1,0 +1,1 @@
+INSERT INTO contribution_referral_codes (braze_uuid, source, referral_code, campaign_id) VALUES ('c619c3da-foob-arba-zbim-082854dc77c7','email','1601906884794524','enviro_moment_2020') ON CONFLICT (referral_code) DO NOTHING;
