@@ -243,7 +243,7 @@ Resources:
       Dimensions:
         - Name: FunctionName
           Value: !Ref WriteReferralCodeToRdsLambda
-      ComparisonOperator: GreaterThanThreshold
+      ComparisonOperator: GreaterThanOrEqualToThreshold
       Threshold: 1
       Period: 600
       EvaluationPeriods: 1
@@ -262,7 +262,7 @@ Resources:
       Dimensions:
         - Name: FunctionName
           Value: !Ref BrazeUploadLambda
-      ComparisonOperator: GreaterThanThreshold
+      ComparisonOperator: GreaterThanOrEqualToThreshold
       Threshold: 1
       Period: 600
       EvaluationPeriods: 1
@@ -281,7 +281,7 @@ Resources:
       Dimensions:
         - Name: FunctionName
           Value: !Ref ReferralCountLambda
-      ComparisonOperator: GreaterThanThreshold
+      ComparisonOperator: GreaterThanOrEqualToThreshold
       Threshold: 1
       Period: 600
       EvaluationPeriods: 1
