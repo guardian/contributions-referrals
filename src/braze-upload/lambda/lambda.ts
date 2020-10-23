@@ -30,6 +30,7 @@ const getLambdaConfig = async (): Promise<LambdaConfig> => {
     }
 };
 const lambdaConfigPromise: Promise<LambdaConfig> = getLambdaConfig();
+// It is important for the DB connection to be created in the global scope, otherwise we create one for each lambda invocation
 const dbConnectionPool: Promise<Pool> = lambdaConfigPromise
     .then(config => createDatabaseConnectionPool(config.dbConfig));
 
