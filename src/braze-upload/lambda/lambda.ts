@@ -6,8 +6,8 @@ import {
     writeSuccessfulReferral
 } from "../lib/db";
 import {getDatabaseParamsFromSSM} from "../../lib/ssm";
-import {sendCampaignIdsToBraze} from "../lib/braze";
-import {createDatabaseConnectionPool} from "../../lib/db";
+import {getBrazeKeyFromSsm, sendCampaignIdsToBraze} from "../lib/braze";
+import {createDatabaseConnectionPool, DBConfig} from "../../lib/db";
 import {logInfo} from "../../lib/log";
 
 const AWS = require('aws-sdk');
@@ -15,7 +15,24 @@ const acquisition_types = require('../gen-nodejs/acquisition_types');
 const serializer = require('thrift-serializer');
 
 const ssm: SSM = new AWS.SSM({region: 'eu-west-1'});
-const dbConnectionPool: Promise<Pool> =  getDatabaseParamsFromSSM(ssm).then(createDatabaseConnectionPool);
+
+interface LambdaConfig {
+    dbConfig: DBConfig,
+    brazeKey: string,
+}
+
+const getLambdaConfig = async (): Promise<LambdaConfig> => {
+    const dbConfig = await getDatabaseParamsFromSSM(ssm);
+    const brazeKey = await getBrazeKeyFromSsm(ssm);
+    return {
+        dbConfig,
+        brazeKey
+    }
+};
+const lambdaConfigPromise: Promise<LambdaConfig> = getLambdaConfig();
+// It is important for the DB connection to be created in the global scope, otherwise we create one for each lambda invocation
+const dbConnectionPool: Promise<Pool> = lambdaConfigPromise
+    .then(config => createDatabaseConnectionPool(config.dbConfig));
 
 interface Event {
     Records: {
@@ -47,6 +64,7 @@ const getReferralCodeFromThriftBytes = (rawThriftData: any): Promise<string | nu
     });
 
 export async function handler(event: Event, context: any): Promise<any> {
+    const config = await lambdaConfigPromise;
     const pool = await dbConnectionPool;
 
     const maybeReferralCodes: (string | null)[] = await Promise.all(
@@ -88,7 +106,7 @@ export async function handler(event: Event, context: any): Promise<any> {
 
             const campaignIds = campaignIdsResult.rows.map(row => row.campaign_id);
 
-            return sendCampaignIdsToBraze(campaignIds, referralData.braze_uuid);
+            return sendCampaignIdsToBraze(campaignIds, referralData.braze_uuid, config.brazeKey);
         });
 
     return Promise.all(resultPromises);
