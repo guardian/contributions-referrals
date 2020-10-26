@@ -1,20 +1,12 @@
 import SSM = require('aws-sdk/clients/ssm');
-import {Pool} from 'pg';
+import {Pool, QueryResult} from 'pg';
 
 import {writeReferralCode} from '../lib/db';
 import {getDatabaseParamsFromSSM, getParamFromSSM, ssmStage} from '../../lib/ssm';
-import {logError, logInfo, logWarning} from '../../lib/log';
-import {isRunningLocally} from "../../lib/stage";
+import {logInfo, logWarning} from '../../lib/log';
 import {ReferralCreatedEvent} from "../lib/models";
 import {getBrazeUuidByEmail} from "../lib/identity";
 import {createDatabaseConnectionPool} from "../../lib/db";
-
-const headers = {
-    "Content-Type": "application/json",
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "*",
-    "Access-Control-Allow-Methods": "*"
-};
 
 const AWS = require('aws-sdk');
 
@@ -25,14 +17,19 @@ const dbConnectionPool: Promise<Pool> =
 const identityAccessToken: Promise<string> =
     getParamFromSSM(ssm, `/contributions-referrals/idapi/${ssmStage}/accessToken`);
 
-export async function handler(event: any, context: any): Promise<object> {
-    const parsedEvent = isRunningLocally() ? event : JSON.parse(event.body);
-    logInfo('parsed: ', parsedEvent);
+export async function handler(event: any, context: any): Promise<number> {
+    const parsedEvents: any[] = event.Records.map((event: any) => JSON.parse(event.body));
+    logInfo('parsed: ', parsedEvents);
 
-
-    return resolveBrazeUuid(parsedEvent).then(validatedEvent =>
-        validatedEvent ? persist(validatedEvent) : badRequest
-    );
+    return Promise.all(
+        parsedEvents.map(parsedEvent =>
+            resolveBrazeUuid(parsedEvent).then(validatedEvent =>
+                validatedEvent ?
+                    persist(validatedEvent) :
+                    Promise.reject(`Failed to validate an event.`)
+            )
+        )
+    ).then(results => results.length);
 }
 
 function resolveBrazeUuid(event: any): Promise<ReferralCreatedEvent | null> {
@@ -65,28 +62,6 @@ function validate(event: any): ReferralCreatedEvent | null {
     }
 }
 
-const badRequest = {
-    headers,
-    statusCode: 400,
-    body: JSON.stringify('Bad Request')
-};
-
-async function persist(referralEvent: ReferralCreatedEvent): Promise<object> {
-    const queryResult = await dbConnectionPool.then(pool => writeReferralCode(referralEvent, pool));
-
-    if (queryResult.rows.length > 0) {
-        return res
-    } else {
-        logError('Failed to persist: ', queryResult);
-        return {
-            headers,
-            statusCode: 500,
-            body: JSON.stringify('Internal Server Error'),
-        }
-    }
+async function persist(referralEvent: ReferralCreatedEvent): Promise<QueryResult> {
+    return dbConnectionPool.then(pool => writeReferralCode(referralEvent, pool));
 }
-
-const res = {
-    headers,
-    statusCode: 200
-};

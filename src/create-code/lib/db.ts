@@ -13,6 +13,7 @@ export function writeReferralCode(record: ReferralCreatedEvent, pool: Pool): Pro
             ) VALUES (
                 $1, $2, $3, $4
             )
+            ON CONFLICT DO NOTHING
             RETURNING *;
         `,
         values: [

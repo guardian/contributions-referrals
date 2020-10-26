@@ -33,7 +33,14 @@ async function run() {
     }
 
     if (input) {
-        await handler(input, null)
+        const event = {
+            Records: [
+                {
+                    body: JSON.stringify(input)
+                }
+            ]
+        };
+        await handler(event, null)
             .then(result => {
                 logInfo('============================');
                 logInfo('Result: ', result);

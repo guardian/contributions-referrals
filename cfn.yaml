@@ -175,12 +175,11 @@ Resources:
               - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/contributions-referrals/db-config/${Stage}
               - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/contributions-referrals/idapi/${Stage}/*
       Events:
-        HttpPost:
-          Type: Api
+        QueueMessages:
+          Type: SQS
           Properties:
-            Path: '/referral-code'
-            Method: post
-            RestApiId: !Ref ApiGateway
+            Queue: !GetAtt ReferralCodeQueue.Arn
+            BatchSize: 1
 
   ReferralCountLambda:
     Type: AWS::Serverless::Function

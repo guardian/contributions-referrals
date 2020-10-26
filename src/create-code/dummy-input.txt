@@ -1,6 +1,6 @@
 {
 		"source": "thankyou",
-		"email": "someemail@gu.com",
+		"email": "tom.forbes@theguardian.com",
 		"code": "EHRKJH33",
 		"campaignId": "test-campaign"
 }
