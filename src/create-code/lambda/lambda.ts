@@ -17,9 +17,10 @@ const dbConnectionPool: Promise<Pool> =
 const identityAccessToken: Promise<string> =
     getParamFromSSM(ssm, `/contributions-referrals/idapi/${ssmStage}/accessToken`);
 
+// Returns the number of successfully processed events
 export async function handler(event: any, context: any): Promise<number> {
     const parsedEvents: any[] = event.Records.map((event: any) => JSON.parse(event.body));
-    logInfo('parsed: ', parsedEvents);
+    logInfo('Events: ', parsedEvents);
 
     return Promise.all(
         parsedEvents.map(parsedEvent =>
