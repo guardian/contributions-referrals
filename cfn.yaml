@@ -129,6 +129,8 @@ Resources:
                 responses:
                   default:
                     statusCode: "200"
+                    responseTemplates:
+                      "application/json": "#set($inputRoot = $input.path('$'))"
                 requestParameters:
                   integration.request.header.Content-Type: "'application/x-www-form-urlencoded'"
                 requestTemplates:
