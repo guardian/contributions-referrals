@@ -180,7 +180,7 @@ Resources:
           Type: SQS
           Properties:
             Queue: !GetAtt ReferralCodeQueue.Arn
-            BatchSize: 1
+            BatchSize: 10
 
   ReferralCountLambda:
     Type: AWS::Serverless::Function
