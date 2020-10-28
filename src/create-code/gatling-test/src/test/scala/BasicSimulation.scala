@@ -10,10 +10,11 @@ class BrazeReferralTest extends Simulation {
   def randomNumber = r.nextInt()
 
   def requestBody: String = s"""{
-											|		"code": "$randomNumber",
-											|		"email": "$randomNumber@gu.com",
-											|		"source": "GATLING"
-											|}""".stripMargin
+                      |		"code": "gatlingTestCode",
+                      |		"email": "gatling.test@gu.com",
+                      |		"source": "GATLING",
+                      |   "campaignId": "gatling-test-campaign"
+                      |}""".stripMargin
 
   val httpProtocol = http
     .baseUrl("https://contribution-referrals-code.support.guardianapis.com")
@@ -25,7 +26,7 @@ class BrazeReferralTest extends Simulation {
 
   val scn = scenario("post referral code")
     .exec(http("Post")
-      .post("/referral")
+      .post("/referral-code-queue")
       .body(StringBody(s"""$requestBody""")).asJson
     )
 
