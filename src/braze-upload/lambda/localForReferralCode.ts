@@ -1,8 +1,7 @@
-import { handler } from "./lambda";
+import {processReferralCode} from "./lambda";
 import {logInfo} from "../../lib/log";
 
 const AWS = require('aws-sdk');
-const fs = require('fs');
 
 process.env.AWS_PROFILE = 'membership';
 const credentials = new AWS.SharedIniFileCredentials({profile: 'membership'});
@@ -10,14 +9,15 @@ const credentials = new AWS.SharedIniFileCredentials({profile: 'membership'});
 AWS.config.credentials = credentials;
 AWS.config.region = 'eu-west-1';
 
+
+const referralCode = process.argv[2];
+console.log("referralCode", referralCode)
+
 async function run() {
     process.env.Stage = 'DEV';
 
     try {
-        const fileContents = fs.readFileSync('./src/braze-upload/test-event.json', 'utf8');
-        const input = JSON.parse(fileContents);
-
-        handler(input, null)
+        await processReferralCode(referralCode)
             .then(result => {
                 console.log('Result: ', result);
             })
