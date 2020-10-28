@@ -45,12 +45,13 @@ interface LambdaDependencies {
 console.log("dependenciesPromise...")
 const dependenciesPromise: Promise<LambdaDependencies> =
     getDatabaseParamsFromSSM(ssm).then(dbConfig =>
-        getBrazeKeyFromSsm(ssm).then(brazeKey =>
-            ({
+        getBrazeKeyFromSsm(ssm).then(brazeKey => {
+            console.log("got dependencies!")
+            return {
                 brazeKey,
                 dbConnectionPool: createDatabaseConnectionPool(dbConfig)
-            })
-        )
+            };
+        })
     );
 
 // const getLambdaConfig = async (): Promise<LambdaConfig> => {
