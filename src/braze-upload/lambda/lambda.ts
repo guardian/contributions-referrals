@@ -24,6 +24,7 @@ interface LambdaConfig {
 }
 
 const getLambdaConfig = async (): Promise<LambdaConfig> => {
+    console.log("getLambdaConfig")
     const dbConfig = await getDatabaseParamsFromSSM(ssm);
     const brazeKey = await getBrazeKeyFromSsm(ssm);
     return {
