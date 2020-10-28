@@ -32,24 +32,42 @@ const ssm: SSM = new AWS.SSM({
     }
 });
 
-interface LambdaConfig {
-    dbConfig: DBConfig,
+// interface LambdaConfig {
+//     dbConfig: DBConfig,
+//     brazeKey: string,
+// }
+
+interface LambdaDependencies {
     brazeKey: string,
+    dbConnectionPool: Pool
 }
 
-const getLambdaConfig = async (): Promise<LambdaConfig> => {
-    console.log("getLambdaConfig")
-    const dbConfig = await getDatabaseParamsFromSSM(ssm);
-    const brazeKey = await getBrazeKeyFromSsm(ssm);
-    return {
-        dbConfig,
-        brazeKey
-    }
-};
-const lambdaConfigPromise: Promise<LambdaConfig> = getLambdaConfig();
-// It is important for the DB connection to be created in the global scope, otherwise we create one for each lambda invocation
-const dbConnectionPool: Promise<Pool> = lambdaConfigPromise
-    .then(config => createDatabaseConnectionPool(config.dbConfig));
+console.log("dependenciesPromise...")
+const dependenciesPromise: Promise<LambdaDependencies> =
+    getDatabaseParamsFromSSM(ssm).then(dbConfig =>
+        getBrazeKeyFromSsm(ssm).then(brazeKey =>
+            ({
+                brazeKey,
+                dbConnectionPool: createDatabaseConnectionPool(dbConfig)
+            })
+        )
+    );
+
+// const getLambdaConfig = async (): Promise<LambdaConfig> => {
+//     console.log("getLambdaConfig")
+//     const dbConfig = await getDatabaseParamsFromSSM(ssm);
+//     const brazeKey = await getBrazeKeyFromSsm(ssm);
+//     return {
+//         dbConfig,
+//         brazeKey
+//     }
+// };
+// const lambdaConfigPromise: Promise<LambdaConfig> = getLambdaConfig();
+// // It is important for the DB connection to be created in the global scope, otherwise we create one for each lambda invocation
+// const dbConnectionPool: Promise<Pool> = lambdaConfigPromise
+//     .then(config => createDatabaseConnectionPool(config.dbConfig));
+
+
 
 interface Event {
     Records: {
@@ -83,11 +101,12 @@ const getReferralCodeFromThriftBytes = (rawThriftData: any): Promise<string | nu
 export const processReferralCode = async (referralCode: string): Promise<void> => {
     logInfo(`Processing referralCode ${referralCode}`);
 
-    const config = await lambdaConfigPromise;
-    const pool = await dbConnectionPool;
+    // const config = await lambdaConfigPromise;
+    // const pool = await dbConnectionPool;
+    const {brazeKey, dbConnectionPool} = await dependenciesPromise;
 
     // Fetch the braze uuid
-    const referralDataLookupResult: QueryResult = await fetchReferralData(referralCode, pool);
+    const referralDataLookupResult: QueryResult = await fetchReferralData(referralCode, dbConnectionPool);
 
     const referralData = referralDataLookupResult.rows[0];
     if (!referralData) {
@@ -101,21 +120,21 @@ export const processReferralCode = async (referralCode: string): Promise<void> =
             referralCode: referralCode,
             campaignId: referralData.campaign_id,
         },
-        pool
+        dbConnectionPool
     );
     if (writeResult.rows.length <= 0) {
         return Promise.reject(`Failed to write successful referral for code ${referralCode}`);
     }
 
     // Fetch the distinct set of campaignIds for this braze user
-    const campaignIdsResult: QueryResult = await fetchCampaignIds(referralData.braze_uuid, pool);
+    const campaignIdsResult: QueryResult = await fetchCampaignIds(referralData.braze_uuid, dbConnectionPool);
     if (campaignIdsResult.rows.length <= 0) {
         return Promise.reject(`No campaignIds found for brazeUuid ${referralData.braze_uuid}`);
     }
 
     const campaignIds = campaignIdsResult.rows.map(row => row.campaign_id);
 
-    return sendCampaignIdsToBraze(campaignIds, referralData.braze_uuid, config.brazeKey);
+    return sendCampaignIdsToBraze(campaignIds, referralData.braze_uuid, brazeKey);
 };
 
 export async function handler(event: Event, context: any): Promise<any> {
