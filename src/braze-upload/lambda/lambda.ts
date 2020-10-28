@@ -43,7 +43,7 @@ interface LambdaDependencies {
 }
 
 console.log("dependenciesPromise...")
-const dependenciesPromise: Promise<LambdaDependencies> =
+const dependenciesPromise = (): Promise<LambdaDependencies> =>
     getDatabaseParamsFromSSM(ssm).then(dbConfig =>
         getBrazeKeyFromSsm(ssm).then(brazeKey => {
             console.log("got dependencies!")
@@ -104,7 +104,7 @@ export const processReferralCode = async (referralCode: string): Promise<void> =
 
     // const config = await lambdaConfigPromise;
     // const pool = await dbConnectionPool;
-    const {brazeKey, dbConnectionPool} = await dependenciesPromise;
+    const {brazeKey, dbConnectionPool} = await dependenciesPromise();
 
     // Fetch the braze uuid
     const referralDataLookupResult: QueryResult = await fetchReferralData(referralCode, dbConnectionPool);
