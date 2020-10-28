@@ -66,8 +66,8 @@ const getReferralCodeFromThriftBytes = (rawThriftData: any): Promise<string | nu
 export const processReferralCode = async (referralCode: string): Promise<void> => {
     logInfo(`Processing referralCode ${referralCode}`);
 
-    const pool = await dbConnectionPool;
     const config = await lambdaConfigPromise;
+    const pool = await dbConnectionPool;
 
     // Fetch the braze uuid
     const referralDataLookupResult: QueryResult = await fetchReferralData(referralCode, pool);
