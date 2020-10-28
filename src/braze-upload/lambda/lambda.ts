@@ -11,6 +11,7 @@ import {createDatabaseConnectionPool, DBConfig} from "../../lib/db";
 import {logInfo} from "../../lib/log";
 
 const AWS = require('aws-sdk');
+AWS.config.maxRetries = 2;
 const acquisition_types = require('../gen-nodejs/acquisition_types');
 const serializer = require('thrift-serializer');
 
