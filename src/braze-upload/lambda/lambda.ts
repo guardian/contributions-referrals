@@ -12,6 +12,7 @@ import {logInfo} from "../../lib/log";
 
 const AWS = require('aws-sdk');
 AWS.config.maxRetries = 2;
+AWS.config.logger = console;
 const acquisition_types = require('../gen-nodejs/acquisition_types');
 const serializer = require('thrift-serializer');
 
