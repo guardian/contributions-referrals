@@ -1,6 +1,7 @@
 import {isProd, isRunningLocally} from './stage';
 
 import SSM = require('aws-sdk/clients/ssm');
+
 import {DBConfig} from "./db";
 
 // locally, if process.env.Stage is not set, it will fetch CODE credentials from SSM

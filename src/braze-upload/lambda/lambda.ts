@@ -22,7 +22,15 @@ AWS.config.logger = console;
 const acquisition_types = require('../gen-nodejs/acquisition_types');
 const serializer = require('thrift-serializer');
 
-const ssm: SSM = new AWS.SSM({region: 'eu-west-1'});
+const ssm: SSM = new AWS.SSM({
+    region: 'eu-west-1',
+    maxRetries: 5,
+    logger: console,
+    httpOptions: {
+        timeout: 20000,
+        connectTimeout: 5000
+    }
+});
 
 interface LambdaConfig {
     dbConfig: DBConfig,
