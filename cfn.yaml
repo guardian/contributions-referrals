@@ -256,6 +256,7 @@ Resources:
               - ssm:GetParameter
             Resource:
               - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/contributions-referrals/db-config/${Stage}
+              - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/contributions-referrals/db-config/${Stage}/*
               - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/contributions-referrals/braze/${Stage}/*
       Events:
         Stream:
