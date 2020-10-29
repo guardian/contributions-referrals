@@ -7,7 +7,7 @@ import {
 } from "../lib/db";
 import {getDatabaseParamsFromSSM} from "../../lib/ssm";
 import {getBrazeKeyFromSsm, sendCampaignIdsToBraze} from "../lib/braze";
-import {createDatabaseConnectionPool, DBConfig} from "../../lib/db";
+import {createDatabaseConnectionPool} from "../../lib/db";
 import {logInfo} from "../../lib/log";
 
 const AWS = require('aws-sdk');
@@ -32,43 +32,22 @@ const ssm: SSM = new AWS.SSM({
     }
 });
 
-// interface LambdaConfig {
-//     dbConfig: DBConfig,
-//     brazeKey: string,
-// }
-
 interface LambdaDependencies {
     brazeKey: string,
     dbConnectionPool: Pool
 }
 
+const fetchDependencies = async (): Promise<LambdaDependencies> => {
+    const dbConfig = await getDatabaseParamsFromSSM(ssm);
+    const brazeKey = await getBrazeKeyFromSsm(ssm);
+
+    return {
+        brazeKey,
+        dbConnectionPool: createDatabaseConnectionPool(dbConfig)
+    }
+};
 console.log("dependenciesPromise...")
-const dependenciesPromise: Promise<LambdaDependencies> =
-    getDatabaseParamsFromSSM(ssm).then(dbConfig =>
-        getBrazeKeyFromSsm(ssm).then(brazeKey => {
-            console.log("got dependencies!")
-            return {
-                brazeKey,
-                dbConnectionPool: createDatabaseConnectionPool(dbConfig)
-            };
-        })
-    );
-
-// const getLambdaConfig = async (): Promise<LambdaConfig> => {
-//     console.log("getLambdaConfig")
-//     const dbConfig = await getDatabaseParamsFromSSM(ssm);
-//     const brazeKey = await getBrazeKeyFromSsm(ssm);
-//     return {
-//         dbConfig,
-//         brazeKey
-//     }
-// };
-// const lambdaConfigPromise: Promise<LambdaConfig> = getLambdaConfig();
-// // It is important for the DB connection to be created in the global scope, otherwise we create one for each lambda invocation
-// const dbConnectionPool: Promise<Pool> = lambdaConfigPromise
-//     .then(config => createDatabaseConnectionPool(config.dbConfig));
-
-
+const dependenciesPromise: Promise<LambdaDependencies> = fetchDependencies();
 
 interface Event {
     Records: {
@@ -102,8 +81,6 @@ const getReferralCodeFromThriftBytes = (rawThriftData: any): Promise<string | nu
 export const processReferralCode = async (referralCode: string): Promise<void> => {
     logInfo(`Processing referralCode ${referralCode}`);
 
-    // const config = await lambdaConfigPromise;
-    // const pool = await dbConnectionPool;
     const {brazeKey, dbConnectionPool} = await dependenciesPromise;
 
     // Fetch the braze uuid
@@ -139,7 +116,7 @@ export const processReferralCode = async (referralCode: string): Promise<void> =
 };
 
 export function handler(event: Event, context: any, callback: (err: Error | null, result?: number) => void) {
-
+    // setTimeout is necessary because of a bug in the node lambda runtime which breaks requests to ssm
     setTimeout(async () => {
         const maybeReferralCodes: (string | null)[] = await Promise.all(
             event.Records.map(record => getReferralCodeFromThriftBytes(record.kinesis.data))
@@ -154,17 +131,4 @@ export function handler(event: Event, context: any, callback: (err: Error | null
             .then(result => callback(null, result.length))
             .catch(err => callback(err));
     },0);
-
-    // const {brazeKey, dbConnectionPool} = await dependenciesPromise;
-
-    // const maybeReferralCodes: (string | null)[] = await Promise.all(
-    //     event.Records.map(record => getReferralCodeFromThriftBytes(record.kinesis.data))
-    // );
-    //
-    // const resultPromises = maybeReferralCodes
-    //     .filter(maybeReferralCode => !!maybeReferralCode)
-    //     .map(c => c as string)  // typescript doesn't know that the above line filters to strings only
-    //     .map(processReferralCode);
-    //
-    // return Promise.all(resultPromises);
 }
