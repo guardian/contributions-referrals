@@ -345,24 +345,24 @@ Resources:
       EvaluationPeriods: 1
       Statistic: Sum
 
-#  BrazeUploadAlarm:
-#    Type: AWS::CloudWatch::Alarm
-#    Condition: IsProd
-#    Properties:
-#      AlarmActions:
-#        - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:contributions-dev
-#      AlarmName: Failed to process successful referral
-#      AlarmDescription: Referral may not have been recorded
-#      MetricName: Errors
-#      Namespace: AWS/Lambda
-#      Dimensions:
-#        - Name: FunctionName
-#          Value: !Ref BrazeUploadLambda
-#      ComparisonOperator: GreaterThanOrEqualToThreshold
-#      Threshold: 1
-#      Period: 600
-#      EvaluationPeriods: 1
-#      Statistic: Sum
+  BrazeUploadAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: IsProd
+    Properties:
+      AlarmActions:
+        - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:contributions-dev
+      AlarmName: Failed to process acquisition in braze-upload lambda
+      AlarmDescription: Referral may not have been recorded
+      MetricName: Errors
+      Namespace: AWS/Lambda
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref BrazeUploadLambda
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Threshold: 1
+      Period: 600
+      EvaluationPeriods: 1
+      Statistic: Sum
 
   ReferralCountAlarm:
     Type: AWS::CloudWatch::Alarm
