@@ -12,7 +12,7 @@ import {logInfo} from "../../lib/log";
 
 const AWS = require('aws-sdk');
 AWS.config.update({
-    maxRetries: 5,
+    maxRetries: 1,
     httpOptions: {
         timeout: 20000,
         connectTimeout: 5000
@@ -24,7 +24,7 @@ const serializer = require('thrift-serializer');
 
 const ssm: SSM = new AWS.SSM({
     region: 'eu-west-1',
-    maxRetries: 5,
+    maxRetries: 1,
     logger: console,
     httpOptions: {
         timeout: 20000,
