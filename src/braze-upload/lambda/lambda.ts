@@ -12,25 +12,12 @@ import {logInfo} from "../../lib/log";
 
 const AWS = require('aws-sdk');
 AWS.config.update({
-    maxRetries: 1,
-    httpOptions: {
-        timeout: 20000,
-        connectTimeout: 5000
-    }
+    maxRetries: 2
 });
-AWS.config.logger = console;
 const acquisition_types = require('../gen-nodejs/acquisition_types');
 const serializer = require('thrift-serializer');
 
-const ssm: SSM = new AWS.SSM({
-    region: 'eu-west-1',
-    maxRetries: 1,
-    logger: console,
-    httpOptions: {
-        timeout: 20000,
-        connectTimeout: 5000
-    }
-});
+const ssm: SSM = new AWS.SSM({region: 'eu-west-1'});
 
 interface LambdaDependencies {
     brazeKey: string,
@@ -46,7 +33,7 @@ const fetchDependencies = async (): Promise<LambdaDependencies> => {
         dbConnectionPool: createDatabaseConnectionPool(dbConfig)
     }
 };
-console.log("dependenciesPromise...")
+
 const dependenciesPromise: Promise<LambdaDependencies> = fetchDependencies();
 
 interface Event {
