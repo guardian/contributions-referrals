@@ -138,18 +138,33 @@ export const processReferralCode = async (referralCode: string): Promise<void> =
     return sendCampaignIdsToBraze(campaignIds, referralData.braze_uuid, brazeKey);
 };
 
-export async function handler(event: Event, context: any): Promise<any> {
+export function handler(event: Event, context: any, callback: (err: Error | null, result?: number) => void) {
+
+    setTimeout(async () => {
+        const maybeReferralCodes: (string | null)[] = await Promise.all(
+            event.Records.map(record => getReferralCodeFromThriftBytes(record.kinesis.data))
+        );
+
+        const resultPromises = maybeReferralCodes
+            .filter(maybeReferralCode => !!maybeReferralCode)
+            .map(c => c as string)  // typescript doesn't know that the above line filters to strings only
+            .map(processReferralCode);
+
+        Promise.all(resultPromises)
+            .then(result => callback(null, result.length))
+            .catch(err => callback(err));
+    },0);
 
     // const {brazeKey, dbConnectionPool} = await dependenciesPromise;
 
-    const maybeReferralCodes: (string | null)[] = await Promise.all(
-        event.Records.map(record => getReferralCodeFromThriftBytes(record.kinesis.data))
-    );
-
-    const resultPromises = maybeReferralCodes
-        .filter(maybeReferralCode => !!maybeReferralCode)
-        .map(c => c as string)  // typescript doesn't know that the above line filters to strings only
-        .map(processReferralCode);
-
-    return Promise.all(resultPromises);
+    // const maybeReferralCodes: (string | null)[] = await Promise.all(
+    //     event.Records.map(record => getReferralCodeFromThriftBytes(record.kinesis.data))
+    // );
+    //
+    // const resultPromises = maybeReferralCodes
+    //     .filter(maybeReferralCode => !!maybeReferralCode)
+    //     .map(c => c as string)  // typescript doesn't know that the above line filters to strings only
+    //     .map(processReferralCode);
+    //
+    // return Promise.all(resultPromises);
 }

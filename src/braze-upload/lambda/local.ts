@@ -17,13 +17,10 @@ async function run() {
         const fileContents = fs.readFileSync('./src/braze-upload/test-event.json', 'utf8');
         const input = JSON.parse(fileContents);
 
-        handler(input, null)
-            .then(result => {
-                console.log('Result: ', result);
-            })
-            .catch(err => {
-                console.log('Failed to run locally: ', err);
-            })
+        handler(input, null, (err, result) => {
+            if (err) console.log('Failed to run locally: ', err);
+            else console.log('Result: ', result);
+        })
     } catch (err) {
         logInfo(`error parsing test event file`, err);
     }
