@@ -140,7 +140,7 @@ export const processReferralCode = async (referralCode: string): Promise<void> =
 
 export async function handler(event: Event, context: any): Promise<any> {
 
-    const {brazeKey, dbConnectionPool} = await dependenciesPromise;
+    // const {brazeKey, dbConnectionPool} = await dependenciesPromise;
 
     const maybeReferralCodes: (string | null)[] = await Promise.all(
         event.Records.map(record => getReferralCodeFromThriftBytes(record.kinesis.data))
