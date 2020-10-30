@@ -350,7 +350,7 @@ Resources:
     Properties:
       AlarmActions:
         - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:contributions-dev
-      AlarmName: Failed to process successful referral
+      AlarmName: Failed to process acquisition in braze-upload lambda
       AlarmDescription: Referral may not have been recorded
       MetricName: Errors
       Namespace: AWS/Lambda
