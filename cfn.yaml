@@ -149,7 +149,7 @@ Resources:
     Properties:
       FunctionName: !Sub contributions-referrals-create-code-${Stage}
       Description: A lambda for saving referral codes to rds
-      Runtime: nodejs10.x
+      Runtime: nodejs12.x
       Handler: create-code/lambda/lambda.handler
       MemorySize: 128
       Timeout: 30
@@ -189,7 +189,7 @@ Resources:
     Properties:
       FunctionName: !Sub contributions-referrals-referral-count-${Stage}
       Description: A lambda for fetching a referral count for a braze user
-      Runtime: nodejs10.x
+      Runtime: nodejs12.x
       Handler: referral-count/lambda/lambda.handler
       MemorySize: 128
       Timeout: 30
@@ -230,7 +230,7 @@ Resources:
     Properties:
       FunctionName: !Sub contributions-referrals-braze-upload-${Stage}
       Description: The lambda to send referrals data to Braze
-      Runtime: nodejs10.x
+      Runtime: nodejs12.x
       Handler: braze-upload/lambda/lambda.handler
       MemorySize: 128
       Timeout: 30
