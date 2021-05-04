@@ -176,6 +176,11 @@ Resources:
             Resource:
               - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/contributions-referrals/db-config/${Stage}
               - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/contributions-referrals/idapi/${Stage}/*
+        Statement:
+          Effect: Allow
+          Action: s3:GetObject
+          Resource:
+            - arn:aws:s3::*:membership-dist/*
       ReservedConcurrentExecutions: 10
       Events:
         QueueMessages:
@@ -215,6 +220,11 @@ Resources:
               - ssm:GetParameter
             Resource:
               - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/contributions-referrals/db-config/${Stage}
+        Statement:
+          Effect: Allow
+          Action: s3:GetObject
+          Resource:
+            - arn:aws:s3::*:membership-dist/*
       Events:
         HttpGet:
           Type: Api
@@ -257,6 +267,11 @@ Resources:
             Resource:
               - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/contributions-referrals/db-config/${Stage}
               - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/contributions-referrals/braze/${Stage}/*
+        Statement:
+          Effect: Allow
+          Action: s3:GetObject
+          Resource:
+            - arn:aws:s3::*:membership-dist/*
       Events:
         Stream:
           Type: Kinesis
