@@ -272,14 +272,17 @@ Resources:
             Action: s3:GetObject
             Resource:
               - arn:aws:s3::*:membership-dist/*
-      Events:
-        Stream:
-          Type: Kinesis
-          Properties:
-            Stream: !Ref StreamArn
-            BatchSize: 10
-            StartingPosition: LATEST
-            MaximumRetryAttempts: 0
+# Kinesis event disabled because the stream now sends JSON, not thrift.
+# If this lambda is used again then it will need to be migrated to use the new JSON model:
+# https://github.com/guardian/support-frontend/blob/main/support-modules/acquisition-events/src/main/scala/com/gu/support/acquisitions/models/AcquisitionDataRow.scala#L14
+#      Events:
+#        Stream:
+#          Type: Kinesis
+#          Properties:
+#            Stream: !Ref StreamArn
+#            BatchSize: 10
+#            StartingPosition: LATEST
+#            MaximumRetryAttempts: 0
 
   DomainName:
     Type: "AWS::ApiGateway::DomainName"
