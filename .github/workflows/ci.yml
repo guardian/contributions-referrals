@@ -45,10 +45,10 @@ jobs:
       - name: Upload to Riff-Raff
         uses: guardian/actions-riff-raff@v2
         with:
-          app: support-reminders
+          app: support-referrals
           configPath: ./riff-raff.yaml
           contentDirectories: |
-            support-reminders-cloudformation:
+            support-referrals-cloudformation:
               - ./cfn.yaml
-            support-reminders:
-              - ./support-reminders.zip
+            support-referrals:
+              - ./support-referrals.zip
