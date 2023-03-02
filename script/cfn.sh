@@ -7,8 +7,8 @@ DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 ROOT_DIR="${DIR}/.."
 cd "$ROOT_DIR/cdk"
 
-yarn install
-yarn tsc
-yarn lint
-yarn test
-yarn synth
+npm run install
+npm run tsc
+npm run lint
+npm run test
+npm run synth
