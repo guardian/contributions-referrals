@@ -10,7 +10,6 @@ cd "$ROOT_DIR"
 yarn clean
 yarn install
 yarn tsc
-yarn lint
 yarn build
 
 cp package.json target

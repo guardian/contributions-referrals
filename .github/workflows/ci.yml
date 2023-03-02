@@ -49,7 +49,6 @@ jobs:
           configPath: ./riff-raff.yaml
           contentDirectories: |
             support-reminders-cloudformation:
-              - ./cdk/cdk.out/SupportReminders-CODE.template.json
-              - ./cdk/cdk.out/SupportReminders-PROD.template.json
+              - ./cfn.yaml
             support-reminders:
               - ./support-reminders.zip
