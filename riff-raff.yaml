@@ -6,7 +6,7 @@ deployments:
     type: cloud-formation
     app: contributions-referrals
     parameters:
-      templatePath: cloudformation/cfn.yaml
+      templatePath: cfn.yaml
 
   contributions-referrals:
     type: aws-lambda
