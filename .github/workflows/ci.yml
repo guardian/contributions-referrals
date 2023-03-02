@@ -37,10 +37,13 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version-file: './.nvmrc'
-          cache: 'yarn'
+          cache: 'npm'
 
       - name: Build project and generate Riff-Raff artefact
         run: ./script/ci.sh
+
+      - name: Generate CFN templates from GuCDK
+        run: ./script/cfn.sh
 
       - name: Upload to Riff-Raff
         uses: guardian/actions-riff-raff@v2
@@ -49,6 +52,7 @@ jobs:
           configPath: ./riff-raff.yaml
           contentDirectories: |
             contributions-referrals-cloudformation:
-              - ./cfn.yaml
+              - ./cdk/cdk.out/ContributionsReferrals-CODE.template.json
+              - ./cdk/cdk.out/ContributionsReferrals-PROD.template.json
             contributions-referrals:
               - ./contributions-referrals.zip
