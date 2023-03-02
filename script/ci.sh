@@ -18,7 +18,7 @@ cp riff-raff.yaml target
 cp cfn.yaml target
 
 pushd target
-yarn install --production
+  yarn install --production
 popd
 
 cd target
