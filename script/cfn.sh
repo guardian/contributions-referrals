@@ -7,8 +7,8 @@ DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 ROOT_DIR="${DIR}/.."
 cd "$ROOT_DIR/cdk"
 
-npm run install
-npm run tsc
+npm install
+npm run build
 npm run lint
 npm run test
 npm run synth

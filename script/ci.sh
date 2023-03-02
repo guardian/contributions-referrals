@@ -8,8 +8,7 @@ ROOT_DIR="${DIR}/.."
 cd "$ROOT_DIR"
 
 npm run clean
-npm run install
-npm run tsc
+npm install
 npm run build
 
 cp package.json target
