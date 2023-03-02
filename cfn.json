@@ -1,0 +1,927 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "The lambda to write referral codes to RDS",
+  "Parameters": {
+    "CertificateArn": {
+      "Description": "ARN of the certificate",
+      "Type": "String"
+    },
+    "DeployBucket": {
+      "Description": "Bucket to copy files to",
+      "Type": "String",
+      "Default": "membership-dist"
+    },
+    "StreamArn": {
+      "Description": "ARN of the kinesis stream",
+      "Type": "String"
+    },
+    "SecurityGroupToAccessPostgres": {
+      "Description": "Security group to access the RDS instance",
+      "Type": "String"
+    },
+    "Stage": {
+      "Description": "Set by RiffRaff on each deploy",
+      "Type": "String",
+      "AllowedValues": [
+        "CODE",
+        "PROD"
+      ]
+    },
+    "Stack": {
+      "Description": "Stack name",
+      "Type": "String",
+      "Default": "support"
+    },
+    "VpcSubnets": {
+      "Description": "Subnets for RDS access",
+      "Type": "List<AWS::EC2::Subnet::Id>"
+    }
+  },
+  "Mappings": {
+    "StageMap": {
+      "CODE": {
+        "DomainName": "contribution-referrals-code.support.guardianapis.com",
+        "CorsOrigin": "'*'"
+      },
+      "PROD": {
+        "DomainName": "contribution-referrals.support.guardianapis.com",
+        "CorsOrigin": "'*'"
+      }
+    }
+  },
+  "Resources": {
+    "ReferralCountLambdaRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Action": [
+                "sts:AssumeRole"
+              ],
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "lambda.amazonaws.com"
+                ]
+              }
+            }
+          ]
+        },
+        "ManagedPolicyArns": [
+          "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+        ],
+        "Policies": [
+          {
+            "PolicyName": "ReferralCountLambdaRolePolicy1",
+            "PolicyDocument": {
+              "Statement": {
+                "Effect": "Allow",
+                "Action": [
+                  "ssm:GetParametersByPath",
+                  "ssm:GetParameter"
+                ],
+                "Resource": [
+                  {
+                    "Fn::Sub": "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/contributions-referrals/db-config/${Stage}"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "PolicyName": "ReferralCountLambdaRolePolicy2",
+            "PolicyDocument": {
+              "Statement": {
+                "Effect": "Allow",
+                "Action": "s3:GetObject",
+                "Resource": [
+                  "arn:aws:s3::*:membership-dist/*"
+                ]
+              }
+            }
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "lambda:createdBy",
+            "Value": "SAM"
+          }
+        ]
+      }
+    },
+    "ApiGatewayProdStage": {
+      "Type": "AWS::ApiGateway::Stage",
+      "Properties": {
+        "DeploymentId": {
+          "Ref": "ApiGatewayDeployment74510d2de2"
+        },
+        "RestApiId": {
+          "Ref": "ApiGateway"
+        },
+        "StageName": "Prod"
+      }
+    },
+    "DomainName": {
+      "Type": "AWS::ApiGateway::DomainName",
+      "Properties": {
+        "RegionalCertificateArn": {
+          "Ref": "CertificateArn"
+        },
+        "DomainName": {
+          "Fn::FindInMap": [
+            "StageMap",
+            {
+              "Ref": "Stage"
+            },
+            "DomainName"
+          ]
+        },
+        "EndpointConfiguration": {
+          "Types": [
+            "REGIONAL"
+          ]
+        }
+      }
+    },
+    "BasePathMapping": {
+      "Type": "AWS::ApiGateway::BasePathMapping",
+      "Properties": {
+        "RestApiId": {
+          "Ref": "ApiGateway"
+        },
+        "DomainName": {
+          "Ref": "DomainName"
+        },
+        "Stage": {
+          "Fn::Sub": "Prod"
+        }
+      },
+      "DependsOn": "ApiGatewayProdStage"
+    },
+    "ReferralCountAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Condition": "IsProd",
+      "Properties": {
+        "AlarmActions": [
+          {
+            "Fn::Sub": "arn:aws:sns:${AWS::Region}:${AWS::AccountId}:contributions-dev"
+          }
+        ],
+        "AlarmName": "Request for a referral count failed",
+        "AlarmDescription": "Braze was unable to fetch a referral count",
+        "MetricName": "Errors",
+        "Namespace": "AWS/Lambda",
+        "Dimensions": [
+          {
+            "Name": "FunctionName",
+            "Value": {
+              "Ref": "ReferralCountLambda"
+            }
+          }
+        ],
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "Threshold": 1,
+        "Period": 600,
+        "EvaluationPeriods": 1,
+        "Statistic": "Sum"
+      }
+    },
+    "WriteReferralCodeToRdsLambda": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "DeployBucket"
+          },
+          "S3Key": {
+            "Fn::Sub": "${Stack}/${Stage}/contributions-referrals/contributions-referrals.zip"
+          }
+        },
+        "Description": "A lambda for saving referral codes to rds",
+        "FunctionName": {
+          "Fn::Sub": "contributions-referrals-create-code-${Stage}"
+        },
+        "Handler": "create-code/lambda/lambda.handler",
+        "MemorySize": 128,
+        "Role": {
+          "Fn::GetAtt": [
+            "WriteReferralCodeToRdsLambdaRole",
+            "Arn"
+          ]
+        },
+        "Runtime": "nodejs16.x",
+        "Timeout": 30,
+        "VpcConfig": {
+          "SecurityGroupIds": [
+            {
+              "Ref": "SecurityGroupToAccessPostgres"
+            }
+          ],
+          "SubnetIds": {
+            "Ref": "VpcSubnets"
+          }
+        },
+        "Environment": {
+          "Variables": {
+            "Stage": {
+              "Ref": "Stage"
+            }
+          }
+        },
+        "Tags": [
+          {
+            "Key": "lambda:createdBy",
+            "Value": "SAM"
+          }
+        ],
+        "ReservedConcurrentExecutions": 10
+      }
+    },
+    "BrazeUploadLambda": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "DeployBucket"
+          },
+          "S3Key": {
+            "Fn::Sub": "${Stack}/${Stage}/contributions-referrals/contributions-referrals.zip"
+          }
+        },
+        "Description": "The lambda to send referrals data to Braze",
+        "FunctionName": {
+          "Fn::Sub": "contributions-referrals-braze-upload-${Stage}"
+        },
+        "Handler": "braze-upload/lambda/lambda.handler",
+        "MemorySize": 128,
+        "Role": {
+          "Fn::GetAtt": [
+            "BrazeUploadLambdaRole",
+            "Arn"
+          ]
+        },
+        "Runtime": "nodejs16.x",
+        "Timeout": 30,
+        "VpcConfig": {
+          "SecurityGroupIds": [
+            {
+              "Ref": "SecurityGroupToAccessPostgres"
+            }
+          ],
+          "SubnetIds": {
+            "Ref": "VpcSubnets"
+          }
+        },
+        "Environment": {
+          "Variables": {
+            "Stage": {
+              "Ref": "Stage"
+            }
+          }
+        },
+        "Tags": [
+          {
+            "Key": "lambda:createdBy",
+            "Value": "SAM"
+          }
+        ]
+      }
+    },
+    "ApiGatewayDeployment74510d2de2": {
+      "Type": "AWS::ApiGateway::Deployment",
+      "Properties": {
+        "Description": "RestApi deployment id: 74510d2de2ad9e61fffe9a71ce075ba06321e21c",
+        "RestApiId": {
+          "Ref": "ApiGateway"
+        },
+        "StageName": "Stage"
+      }
+    },
+    "DNSRecord": {
+      "Type": "AWS::Route53::RecordSet",
+      "Properties": {
+        "HostedZoneName": "support.guardianapis.com.",
+        "Name": {
+          "Fn::FindInMap": [
+            "StageMap",
+            {
+              "Ref": "Stage"
+            },
+            "DomainName"
+          ]
+        },
+        "Comment": {
+          "Fn::Sub": "CNAME for contributions referrals endpoint ${Stage}"
+        },
+        "Type": "CNAME",
+        "TTL": "120",
+        "ResourceRecords": [
+          {
+            "Fn::GetAtt": [
+              "DomainName",
+              "RegionalDomainName"
+            ]
+          }
+        ]
+      }
+    },
+    "ApiGateway": {
+      "Type": "AWS::ApiGateway::RestApi",
+      "Properties": {
+        "Body": {
+          "info": {
+            "title": {
+              "Ref": "AWS::StackName"
+            }
+          },
+          "paths": {
+            "/referral-code-queue": {
+              "post": {
+                "x-amazon-apigateway-integration": {
+                  "passthroughBehavior": "never",
+                  "responses": {
+                    "default": {
+                      "statusCode": "200",
+                      "responseTemplates": {
+                        "application/json": "#set($inputRoot = $input.path('$'))"
+                      }
+                    }
+                  },
+                  "requestParameters": {
+                    "integration.request.header.Content-Type": "'application/x-www-form-urlencoded'"
+                  },
+                  "uri": {
+                    "Fn::Sub": "arn:aws:apigateway:${AWS::Region}:sqs:path//"
+                  },
+                  "httpMethod": "POST",
+                  "requestTemplates": {
+                    "application/json": {
+                      "Fn::Sub": "Action=SendMessage##\n&QueueUrl=$util.urlEncode('${ReferralCodeQueue}')##\n&MessageBody=$util.urlEncode($input.body)##\n"
+                    }
+                  },
+                  "credentials": {
+                    "Fn::GetAtt": "ApiGatewayRole.Arn"
+                  },
+                  "type": "aws"
+                },
+                "produces": [
+                  "application/json"
+                ],
+                "consumes": [
+                  "application/json"
+                ],
+                "responses": {
+                  "200": {
+                    "description": "200 response",
+                    "schema": {
+                      "$ref": "#/definitions/Empty"
+                    }
+                  }
+                }
+              },
+              "options": {
+                "x-amazon-apigateway-integration": {
+                  "type": "mock",
+                  "requestTemplates": {
+                    "application/json": "{\n  \"statusCode\" : 200\n}\n"
+                  },
+                  "responses": {
+                    "default": {
+                      "statusCode": "200",
+                      "responseTemplates": {
+                        "application/json": "{}\n"
+                      },
+                      "responseParameters": {
+                        "method.response.header.Access-Control-Allow-Origin": {
+                          "Fn::FindInMap": [
+                            "StageMap",
+                            {
+                              "Ref": "Stage"
+                            },
+                            "CorsOrigin"
+                          ]
+                        },
+                        "method.response.header.Access-Control-Allow-Methods": "'*'",
+                        "method.response.header.Access-Control-Allow-Headers": "'Content-Type'"
+                      }
+                    }
+                  }
+                },
+                "consumes": [
+                  "application/json"
+                ],
+                "summary": "CORS support",
+                "responses": {
+                  "200": {
+                    "headers": {
+                      "Access-Control-Allow-Origin": {
+                        "type": "string"
+                      },
+                      "Access-Control-Allow-Headers": {
+                        "type": "string"
+                      },
+                      "Access-Control-Allow-Methods": {
+                        "type": "string"
+                      }
+                    },
+                    "description": "Default response for CORS method"
+                  }
+                },
+                "produces": [
+                  "application/json"
+                ]
+              }
+            },
+            "/referral-count": {
+              "options": {
+                "x-amazon-apigateway-integration": {
+                  "type": "mock",
+                  "requestTemplates": {
+                    "application/json": "{\n  \"statusCode\" : 200\n}\n"
+                  },
+                  "responses": {
+                    "default": {
+                      "statusCode": "200",
+                      "responseTemplates": {
+                        "application/json": "{}\n"
+                      },
+                      "responseParameters": {
+                        "method.response.header.Access-Control-Allow-Origin": {
+                          "Fn::FindInMap": [
+                            "StageMap",
+                            {
+                              "Ref": "Stage"
+                            },
+                            "CorsOrigin"
+                          ]
+                        },
+                        "method.response.header.Access-Control-Allow-Methods": "'*'",
+                        "method.response.header.Access-Control-Allow-Headers": "'Content-Type'"
+                      }
+                    }
+                  }
+                },
+                "consumes": [
+                  "application/json"
+                ],
+                "summary": "CORS support",
+                "responses": {
+                  "200": {
+                    "headers": {
+                      "Access-Control-Allow-Origin": {
+                        "type": "string"
+                      },
+                      "Access-Control-Allow-Headers": {
+                        "type": "string"
+                      },
+                      "Access-Control-Allow-Methods": {
+                        "type": "string"
+                      }
+                    },
+                    "description": "Default response for CORS method"
+                  }
+                },
+                "produces": [
+                  "application/json"
+                ]
+              },
+              "get": {
+                "x-amazon-apigateway-integration": {
+                  "passthroughBehavior": "when_no_match",
+                  "responses": {
+                    "default": {
+                      "statusCode": "200"
+                    }
+                  },
+                  "uri": {
+                    "Fn::Sub": "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${ReferralCountLambda}/invocations"
+                  },
+                  "httpMethod": "POST",
+                  "credentials": {
+                    "Fn::GetAtt": "ApiGatewayRole.Arn"
+                  },
+                  "type": "aws_proxy"
+                },
+                "responses": {
+                  "200": {
+                    "description": "200 response",
+                    "schema": {
+                      "$ref": "#/definitions/Empty"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "swagger": "2.0",
+          "definitions": {
+            "Empty": {
+              "type": "object",
+              "title": "Empty Schema"
+            }
+          }
+        }
+      }
+    },
+    "APIKey": {
+      "Type": "AWS::ApiGateway::ApiKey",
+      "Properties": {
+        "Description": "Key required for requests from braze",
+        "Enabled": true,
+        "Name": {
+          "Fn::Sub": "contributions-referrals-api-key-${Stage}"
+        },
+        "StageKeys": [
+          {
+            "RestApiId": {
+              "Ref": "ApiGateway"
+            },
+            "StageName": {
+              "Fn::Sub": "Prod"
+            }
+          }
+        ]
+      },
+      "DependsOn": "ApiGatewayProdStage"
+    },
+    "WriteReferralCodeToRdsAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Condition": "IsProd",
+      "Properties": {
+        "AlarmActions": [
+          {
+            "Fn::Sub": "arn:aws:sns:${AWS::Region}:${AWS::AccountId}:contributions-dev"
+          }
+        ],
+        "AlarmName": "Failed to write a referral code to the database",
+        "AlarmDescription": "User's referral code is not being stored",
+        "MetricName": "Errors",
+        "Namespace": "AWS/Lambda",
+        "Dimensions": [
+          {
+            "Name": "FunctionName",
+            "Value": {
+              "Ref": "WriteReferralCodeToRdsLambda"
+            }
+          }
+        ],
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "Threshold": 1,
+        "Period": 600,
+        "EvaluationPeriods": 1,
+        "Statistic": "Sum"
+      }
+    },
+    "WriteReferralCodeToRdsLambdaQueueMessages": {
+      "Type": "AWS::Lambda::EventSourceMapping",
+      "Properties": {
+        "BatchSize": 10,
+        "EventSourceArn": {
+          "Fn::GetAtt": "ReferralCodeQueue.Arn"
+        },
+        "FunctionName": {
+          "Ref": "WriteReferralCodeToRdsLambda"
+        }
+      }
+    },
+    "BrazeUploadLambdaRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Action": [
+                "sts:AssumeRole"
+              ],
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "lambda.amazonaws.com"
+                ]
+              }
+            }
+          ]
+        },
+        "ManagedPolicyArns": [
+          "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+        ],
+        "Policies": [
+          {
+            "PolicyName": "BrazeUploadLambdaRolePolicy1",
+            "PolicyDocument": {
+              "Statement": {
+                "Effect": "Allow",
+                "Action": [
+                  "ssm:GetParametersByPath",
+                  "ssm:GetParameter"
+                ],
+                "Resource": [
+                  {
+                    "Fn::Sub": "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/contributions-referrals/db-config/${Stage}"
+                  },
+                  {
+                    "Fn::Sub": "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/contributions-referrals/braze/${Stage}/*"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "PolicyName": "BrazeUploadLambdaRolePolicy2",
+            "PolicyDocument": {
+              "Statement": {
+                "Effect": "Allow",
+                "Action": "s3:GetObject",
+                "Resource": [
+                  "arn:aws:s3::*:membership-dist/*"
+                ]
+              }
+            }
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "lambda:createdBy",
+            "Value": "SAM"
+          }
+        ]
+      }
+    },
+    "ApiGatewayRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "Path": "/",
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "apigateway.amazonaws.com"
+                ]
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "ManagedPolicyArns": [
+          "arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs"
+        ],
+        "Policies": [
+          {
+            "PolicyName": "ApiQueuePolicy",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "sqs:ReceiveMessage",
+                    "sqs:SendMessage"
+                  ],
+                  "Resource": {
+                    "Fn::GetAtt": "ReferralCodeQueue.Arn"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "PolicyName": "LambdaInvokePolicy",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "lambda:InvokeFunction"
+                  ],
+                  "Resource": {
+                    "Fn::GetAtt": "ReferralCountLambda.Arn"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "WriteReferralCodeToRdsLambdaRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Action": [
+                "sts:AssumeRole"
+              ],
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "lambda.amazonaws.com"
+                ]
+              }
+            }
+          ]
+        },
+        "ManagedPolicyArns": [
+          "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole",
+          "arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole"
+        ],
+        "Policies": [
+          {
+            "PolicyName": "WriteReferralCodeToRdsLambdaRolePolicy1",
+            "PolicyDocument": {
+              "Statement": {
+                "Effect": "Allow",
+                "Action": [
+                  "ssm:GetParametersByPath",
+                  "ssm:GetParameter"
+                ],
+                "Resource": [
+                  {
+                    "Fn::Sub": "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/contributions-referrals/db-config/${Stage}"
+                  },
+                  {
+                    "Fn::Sub": "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/contributions-referrals/idapi/${Stage}/*"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "PolicyName": "WriteReferralCodeToRdsLambdaRolePolicy2",
+            "PolicyDocument": {
+              "Statement": {
+                "Effect": "Allow",
+                "Action": "s3:GetObject",
+                "Resource": [
+                  "arn:aws:s3::*:membership-dist/*"
+                ]
+              }
+            }
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "lambda:createdBy",
+            "Value": "SAM"
+          }
+        ]
+      }
+    },
+    "ReferralCodeQueue": {
+      "Type": "AWS::SQS::Queue"
+    },
+    "ReferralCountLambdaHttpGetPermissionProd": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Ref": "ReferralCountLambda"
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Sub": [
+            "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${__ApiId__}/${__Stage__}/GET/referral-count",
+            {
+              "__ApiId__": {
+                "Ref": "ApiGateway"
+              },
+              "__Stage__": "*"
+            }
+          ]
+        }
+      }
+    },
+    "UsagePlanKey": {
+      "Type": "AWS::ApiGateway::UsagePlanKey",
+      "Properties": {
+        "KeyId": {
+          "Ref": "APIKey"
+        },
+        "KeyType": "API_KEY",
+        "UsagePlanId": {
+          "Ref": "UsagePlan"
+        }
+      },
+      "DependsOn": [
+        "APIKey",
+        "UsagePlan"
+      ]
+    },
+    "BrazeUploadAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Condition": "IsProd",
+      "Properties": {
+        "AlarmActions": [
+          {
+            "Fn::Sub": "arn:aws:sns:${AWS::Region}:${AWS::AccountId}:contributions-dev"
+          }
+        ],
+        "AlarmName": "Failed to process acquisition in braze-upload lambda",
+        "AlarmDescription": "Referral may not have been recorded",
+        "MetricName": "Errors",
+        "Namespace": "AWS/Lambda",
+        "Dimensions": [
+          {
+            "Name": "FunctionName",
+            "Value": {
+              "Ref": "BrazeUploadLambda"
+            }
+          }
+        ],
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "Threshold": 1,
+        "Period": 600,
+        "EvaluationPeriods": 1,
+        "Statistic": "Sum"
+      }
+    },
+    "UsagePlan": {
+      "Type": "AWS::ApiGateway::UsagePlan",
+      "Properties": {
+        "UsagePlanName": {
+          "Fn::Sub": "contributions-referrals-api-usage-plan-${Stage}"
+        },
+        "ApiStages": [
+          {
+            "ApiId": {
+              "Ref": "ApiGateway"
+            },
+            "Stage": "Prod"
+          }
+        ]
+      },
+      "DependsOn": "ApiGatewayProdStage"
+    },
+    "ReferralCountLambda": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "DeployBucket"
+          },
+          "S3Key": {
+            "Fn::Sub": "${Stack}/${Stage}/contributions-referrals/contributions-referrals.zip"
+          }
+        },
+        "Description": "A lambda for fetching a referral count for a braze user",
+        "FunctionName": {
+          "Fn::Sub": "contributions-referrals-referral-count-${Stage}"
+        },
+        "Handler": "referral-count/lambda/lambda.handler",
+        "MemorySize": 128,
+        "Role": {
+          "Fn::GetAtt": [
+            "ReferralCountLambdaRole",
+            "Arn"
+          ]
+        },
+        "Runtime": "nodejs16.x",
+        "Timeout": 30,
+        "VpcConfig": {
+          "SecurityGroupIds": [
+            {
+              "Ref": "SecurityGroupToAccessPostgres"
+            }
+          ],
+          "SubnetIds": {
+            "Ref": "VpcSubnets"
+          }
+        },
+        "Environment": {
+          "Variables": {
+            "Stage": {
+              "Ref": "Stage"
+            }
+          }
+        },
+        "Tags": [
+          {
+            "Key": "lambda:createdBy",
+            "Value": "SAM"
+          }
+        ]
+      }
+    }
+  },
+  "Conditions": {
+    "IsProd": {
+      "Fn::Equals": [
+        {
+          "Ref": "Stage"
+        },
+        "PROD"
+      ]
+    }
+  }
+}

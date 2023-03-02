@@ -7,17 +7,16 @@ DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 ROOT_DIR="${DIR}/.."
 cd "$ROOT_DIR"
 
-yarn clean
-yarn install
-yarn tsc
-yarn build
+npm run clean
+npm install
+npm run build
 
 cp package.json target
 cp riff-raff.yaml target
-cp cfn.yaml target
+cp cfn.json target
 
 pushd target
-  yarn install --production
+  npm install --production
 popd
 
 cd target

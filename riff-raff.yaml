@@ -6,7 +6,9 @@ deployments:
     type: cloud-formation
     app: contributions-referrals
     parameters:
-      templatePath: cfn.yaml
+      templateStagePaths:
+        CODE: ContributionsReferrals-CODE.template.json
+        PROD: ContributionsReferrals-PROD.template.json
 
   contributions-referrals:
     type: aws-lambda
