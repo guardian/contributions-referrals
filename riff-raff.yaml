@@ -2,19 +2,20 @@ stacks: [support]
 regions: [eu-west-1]
 
 deployments:
+  contributions-referrals-cloudformation:
+    type: cloud-formation
+    app: contributions-referrals
+    parameters:
+      templatePath: cfn.yaml
+
   contributions-referrals:
     type: aws-lambda
     parameters:
       prefixStack: false
-      bucket: membership-dist
+      bucketSsmLookup: true
       fileName: contributions-referrals.zip
       functionNames:
         - contributions-referrals-braze-upload-
         - contributions-referrals-create-code-
         - contributions-referrals-referral-count-
     dependencies: [contributions-referrals-cloudformation]
-  contributions-referrals-cloudformation:
-    type: cloud-formation
-    app: contributions-referrals
-    parameters:
-      templatePath: cloudformation/cfn.yaml
