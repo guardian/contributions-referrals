@@ -22,4 +22,4 @@ popd
 
 cd target
 
-zip -FSr "${ROOT_DIR}/support-referrals.zip" ./*
+zip -FSr "${ROOT_DIR}/contributions-referrals.zip" ./*

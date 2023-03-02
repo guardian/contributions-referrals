@@ -1,4 +1,4 @@
-name: Build support-referrals
+name: Build contributions-referrals
 
 on:
   pull_request:
@@ -18,7 +18,7 @@ jobs:
     permissions:
       id-token: write
       contents: read
-    name: support-referrals build
+    name: contributions-referrals build
     runs-on: ubuntu-latest
     steps:
       - name: Env
@@ -45,10 +45,10 @@ jobs:
       - name: Upload to Riff-Raff
         uses: guardian/actions-riff-raff@v2
         with:
-          app: support-referrals
+          app: contributions-referrals
           configPath: ./riff-raff.yaml
           contentDirectories: |
-            support-referrals-cloudformation:
+            contributions-referrals-cloudformation:
               - ./cfn.yaml
-            support-referrals:
-              - ./support-referrals.zip
+            contributions-referrals:
+              - ./contributions-referrals.zip
