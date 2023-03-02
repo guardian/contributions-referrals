@@ -14,7 +14,7 @@ yarn build
 
 cp package.json target
 cp riff-raff.yaml target
-cp cfn.yaml target
+cp cfn.json target
 
 pushd target
   yarn install --production
