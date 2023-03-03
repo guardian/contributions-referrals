@@ -113,31 +113,31 @@ export class ContributionsReferrals extends GuStack {
 
 
     // ---- DNS ---- //
-    const certificateArn = `arn:aws:acm:eu-west-1:${this.account}:certificate/${props.certificateId}`;
-
-    const cfnDomainName = new CfnDomainName(this, "DomainName", {
-      domainName: props.domainName,
-      regionalCertificateArn: certificateArn,
-      endpointConfiguration: {
-        types: ["REGIONAL"]
-      }
-    });
-
-    new CfnBasePathMapping(this, "BasePathMapping", {
-      domainName: cfnDomainName.ref,
-      restApiId: contributionsReferralsApi.api.restApiId,
-      stage: contributionsReferralsApi.api.deploymentStage.stageName,
-    });
-
-    new CfnRecordSet(this, "DNSRecord", {
-      name: props.domainName,
-      type: "CNAME",
-      hostedZoneId: props.hostedZoneId,
-      ttl: "60",
-      resourceRecords: [
-        cfnDomainName.attrRegionalDomainName
-      ],
-    });
+    // const certificateArn = `arn:aws:acm:eu-west-1:${this.account}:certificate/${props.certificateId}`;
+    //
+    // const cfnDomainName = new CfnDomainName(this, "DomainName", {
+    //   domainName: props.domainName,
+    //   regionalCertificateArn: certificateArn,
+    //   endpointConfiguration: {
+    //     types: ["REGIONAL"]
+    //   }
+    // });
+    //
+    // new CfnBasePathMapping(this, "BasePathMapping", {
+    //   domainName: cfnDomainName.ref,
+    //   restApiId: contributionsReferralsApi.api.restApiId,
+    //   stage: contributionsReferralsApi.api.deploymentStage.stageName,
+    // });
+    //
+    // new CfnRecordSet(this, "DNSRecord", {
+    //   name: props.domainName,
+    //   type: "CNAME",
+    //   hostedZoneId: props.hostedZoneId,
+    //   ttl: "60",
+    //   resourceRecords: [
+    //     cfnDomainName.attrRegionalDomainName
+    //   ],
+    // });
 
 
     // ---- Apply policies ---- //

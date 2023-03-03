@@ -9,12 +9,12 @@ describe("The ContributionsReferrals stack", () => {
     const codeStack = new ContributionsReferrals(
         app,
         "ContributionsReferrals-CODE",
-        codeProps
+        codeProps,
     );
     const prodStack = new ContributionsReferrals(
         app,
         "ContributionsReferrals-PROD",
-        prodProps
+        prodProps,
     );
     expect(Template.fromStack(codeStack).toJSON()).toMatchSnapshot();
     expect(Template.fromStack(prodStack).toJSON()).toMatchSnapshot();

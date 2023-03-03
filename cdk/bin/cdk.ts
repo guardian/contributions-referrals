@@ -1,6 +1,7 @@
 import "source-map-support/register";
 import {App} from "aws-cdk-lib";
-import {ContributionsReferrals, ContributionsReferralsProps} from "../lib/contributions-referrals";
+import {ContributionsReferrals} from "../lib/contributions-referrals";
+import type {ContributionsReferralsProps} from "../lib/contributions-referrals";
 
 const app = new App();
 

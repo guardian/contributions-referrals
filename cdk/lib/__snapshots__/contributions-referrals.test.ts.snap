@@ -27,8 +27,45 @@ exports[`The ContributionsReferrals stack matches the snapshot 1`] = `
     },
   },
   "Metadata": {
-    "gu:cdk:constructs": [],
+    "gu:cdk:constructs": [
+      "GuStringParameter",
+      "GuVpcParameter",
+      "GuSubnetListParameter",
+      "GuDistributionBucketParameter",
+      "GuLambdaFunction",
+      "GuLambdaFunction",
+      "GuApiGatewayWithLambdaByPath",
+      "GuApiGateway5xxPercentageAlarm",
+    ],
     "gu:cdk:version": "TEST",
+  },
+  "Outputs": {
+    "RestApiEndpoint0551178A": {
+      "Value": {
+        "Fn::Join": [
+          "",
+          [
+            "https://",
+            {
+              "Ref": "RestApi0C43BF4B",
+            },
+            ".execute-api.",
+            {
+              "Ref": "AWS::Region",
+            },
+            ".",
+            {
+              "Ref": "AWS::URLSuffix",
+            },
+            "/",
+            {
+              "Ref": "RestApiDeploymentStageprod3855DE66",
+            },
+            "/",
+          ],
+        ],
+      },
+    },
   },
   "Parameters": {
     "CertificateArn": {
@@ -40,7 +77,21 @@ exports[`The ContributionsReferrals stack matches the snapshot 1`] = `
       "Description": "Bucket to copy files to",
       "Type": "String",
     },
+    "DistributionBucketName": {
+      "Default": "/account/services/artifact.bucket",
+      "Description": "SSM parameter containing the S3 bucket name holding distribution artifacts",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "PrivateSubnets": {
+      "Default": "/account/vpc/primary/subnets/private",
+      "Description": "A list of private subnets",
+      "Type": "AWS::SSM::Parameter::Value<List<AWS::EC2::Subnet::Id>>",
+    },
     "SecurityGroupToAccessPostgres": {
+      "Description": "Security group to access the RDS instance",
+      "Type": "String",
+    },
+    "SecurityGroupToAccessPostgresCDK": {
       "Description": "Security group to access the RDS instance",
       "Type": "String",
     },
@@ -60,6 +111,11 @@ exports[`The ContributionsReferrals stack matches the snapshot 1`] = `
     "StreamArn": {
       "Description": "ARN of the kinesis stream",
       "Type": "String",
+    },
+    "VpcId": {
+      "Default": "/account/vpc/primary/id",
+      "Description": "Virtual Private Cloud to run EC2 instances within. Should NOT be the account default VPC.",
+      "Type": "AWS::SSM::Parameter::Value<AWS::EC2::VPC::Id>",
     },
     "VpcSubnets": {
       "Description": "Subnets for RDS access",
@@ -102,7 +158,7 @@ exports[`The ContributionsReferrals stack matches the snapshot 1`] = `
           },
           {
             "Key": "Stage",
-            "Value": "TEST",
+            "Value": "CODE",
           },
         ],
       },
@@ -329,7 +385,7 @@ exports[`The ContributionsReferrals stack matches the snapshot 1`] = `
           },
           {
             "Key": "Stage",
-            "Value": "TEST",
+            "Value": "CODE",
           },
         ],
       },
@@ -344,6 +400,79 @@ exports[`The ContributionsReferrals stack matches the snapshot 1`] = `
         "StageName": "Stage",
       },
       "Type": "AWS::ApiGateway::Deployment",
+    },
+    "ApiGatewayHigh5xxPercentageAlarmContributionsreferrals8DE04ED5": {
+      "Properties": {
+        "ActionsEnabled": true,
+        "AlarmActions": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:aws:sns:",
+                {
+                  "Ref": "AWS::Region",
+                },
+                ":",
+                {
+                  "Ref": "AWS::AccountId",
+                },
+                ":conversion-dev",
+              ],
+            ],
+          },
+        ],
+        "AlarmDescription": "contributions-referrals exceeded 1% error rate",
+        "AlarmName": "High 5XX error % from contributions-referrals (ApiGateway) in CODE",
+        "ComparisonOperator": "GreaterThanThreshold",
+        "EvaluationPeriods": 1,
+        "Metrics": [
+          {
+            "Expression": "100*m1/m2",
+            "Id": "expr_1",
+            "Label": "% of 5XX responses served for contributions-referrals",
+          },
+          {
+            "Id": "m1",
+            "MetricStat": {
+              "Metric": {
+                "Dimensions": [
+                  {
+                    "Name": "ApiName",
+                    "Value": "support-CODE-contributions-referrals",
+                  },
+                ],
+                "MetricName": "5XXError",
+                "Namespace": "AWS/ApiGateway",
+              },
+              "Period": 60,
+              "Stat": "Sum",
+            },
+            "ReturnData": false,
+          },
+          {
+            "Id": "m2",
+            "MetricStat": {
+              "Metric": {
+                "Dimensions": [
+                  {
+                    "Name": "ApiName",
+                    "Value": "support-CODE-contributions-referrals",
+                  },
+                ],
+                "MetricName": "Count",
+                "Namespace": "AWS/ApiGateway",
+              },
+              "Period": 60,
+              "Stat": "SampleCount",
+            },
+            "ReturnData": false,
+          },
+        ],
+        "Threshold": 1,
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
     },
     "ApiGatewayProdStage": {
       "Properties": {
@@ -369,7 +498,7 @@ exports[`The ContributionsReferrals stack matches the snapshot 1`] = `
           },
           {
             "Key": "Stage",
-            "Value": "TEST",
+            "Value": "CODE",
           },
         ],
       },
@@ -447,7 +576,7 @@ exports[`The ContributionsReferrals stack matches the snapshot 1`] = `
           },
           {
             "Key": "Stage",
-            "Value": "TEST",
+            "Value": "CODE",
           },
         ],
       },
@@ -547,7 +676,7 @@ exports[`The ContributionsReferrals stack matches the snapshot 1`] = `
           },
           {
             "Key": "Stage",
-            "Value": "TEST",
+            "Value": "CODE",
           },
         ],
         "Timeout": 30,
@@ -639,7 +768,7 @@ exports[`The ContributionsReferrals stack matches the snapshot 1`] = `
           },
           {
             "Key": "Stage",
-            "Value": "TEST",
+            "Value": "CODE",
           },
         ],
       },
@@ -707,7 +836,7 @@ exports[`The ContributionsReferrals stack matches the snapshot 1`] = `
           },
           {
             "Key": "Stage",
-            "Value": "TEST",
+            "Value": "CODE",
           },
         ],
       },
@@ -730,7 +859,7 @@ exports[`The ContributionsReferrals stack matches the snapshot 1`] = `
           },
           {
             "Key": "Stage",
-            "Value": "TEST",
+            "Value": "CODE",
           },
         ],
       },
@@ -813,7 +942,7 @@ exports[`The ContributionsReferrals stack matches the snapshot 1`] = `
           },
           {
             "Key": "Stage",
-            "Value": "TEST",
+            "Value": "CODE",
           },
         ],
         "Timeout": 30,
@@ -923,11 +1052,655 @@ exports[`The ContributionsReferrals stack matches the snapshot 1`] = `
           },
           {
             "Key": "Stage",
-            "Value": "TEST",
+            "Value": "CODE",
           },
         ],
       },
       "Type": "AWS::IAM::Role",
+    },
+    "RestApi0C43BF4B": {
+      "Properties": {
+        "Name": "support-CODE-contributions-referrals",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/contributions-referrals",
+          },
+          {
+            "Key": "Stack",
+            "Value": "support",
+          },
+          {
+            "Key": "Stage",
+            "Value": "CODE",
+          },
+        ],
+      },
+      "Type": "AWS::ApiGateway::RestApi",
+    },
+    "RestApiAccount7C83CF5A": {
+      "DeletionPolicy": "Retain",
+      "DependsOn": [
+        "RestApi0C43BF4B",
+      ],
+      "Properties": {
+        "CloudWatchRoleArn": {
+          "Fn::GetAtt": [
+            "RestApiCloudWatchRoleE3ED6605",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::ApiGateway::Account",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "RestApiCloudWatchRoleE3ED6605": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "apigateway.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs",
+              ],
+            ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/contributions-referrals",
+          },
+          {
+            "Key": "Stack",
+            "Value": "support",
+          },
+          {
+            "Key": "Stage",
+            "Value": "CODE",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "RestApiDeployment180EC503283c72cddd5e3ec8ff8470df1d758b3b": {
+      "DependsOn": [
+        "RestApiOPTIONS6AA64D2D",
+        "RestApireferralcodequeueOPTIONS59126137",
+        "RestApireferralcodequeuePOSTD307C6F3",
+        "RestApireferralcodequeue3A796C32",
+        "RestApireferralcountGETD4B46E92",
+        "RestApireferralcountOPTIONSFB971E18",
+        "RestApireferralcountDA304AD4",
+      ],
+      "Properties": {
+        "Description": "Automatically created by the RestApi construct",
+        "RestApiId": {
+          "Ref": "RestApi0C43BF4B",
+        },
+      },
+      "Type": "AWS::ApiGateway::Deployment",
+    },
+    "RestApiDeploymentStageprod3855DE66": {
+      "DependsOn": [
+        "RestApiAccount7C83CF5A",
+      ],
+      "Properties": {
+        "DeploymentId": {
+          "Ref": "RestApiDeployment180EC503283c72cddd5e3ec8ff8470df1d758b3b",
+        },
+        "RestApiId": {
+          "Ref": "RestApi0C43BF4B",
+        },
+        "StageName": "prod",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/contributions-referrals",
+          },
+          {
+            "Key": "Stack",
+            "Value": "support",
+          },
+          {
+            "Key": "Stage",
+            "Value": "CODE",
+          },
+        ],
+      },
+      "Type": "AWS::ApiGateway::Stage",
+    },
+    "RestApiOPTIONS6AA64D2D": {
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "OPTIONS",
+        "Integration": {
+          "IntegrationResponses": [
+            {
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type'",
+                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'",
+                "method.response.header.Access-Control-Allow-Origin": "'*'",
+              },
+              "StatusCode": "204",
+            },
+          ],
+          "RequestTemplates": {
+            "application/json": "{ statusCode: 200 }",
+          },
+          "Type": "MOCK",
+        },
+        "MethodResponses": [
+          {
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Headers": true,
+              "method.response.header.Access-Control-Allow-Methods": true,
+              "method.response.header.Access-Control-Allow-Origin": true,
+            },
+            "StatusCode": "204",
+          },
+        ],
+        "ResourceId": {
+          "Fn::GetAtt": [
+            "RestApi0C43BF4B",
+            "RootResourceId",
+          ],
+        },
+        "RestApiId": {
+          "Ref": "RestApi0C43BF4B",
+        },
+      },
+      "Type": "AWS::ApiGateway::Method",
+    },
+    "RestApireferralcodequeue3A796C32": {
+      "Properties": {
+        "ParentId": {
+          "Fn::GetAtt": [
+            "RestApi0C43BF4B",
+            "RootResourceId",
+          ],
+        },
+        "PathPart": "referral-code-queue",
+        "RestApiId": {
+          "Ref": "RestApi0C43BF4B",
+        },
+      },
+      "Type": "AWS::ApiGateway::Resource",
+    },
+    "RestApireferralcodequeueOPTIONS59126137": {
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "OPTIONS",
+        "Integration": {
+          "IntegrationResponses": [
+            {
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type'",
+                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'",
+                "method.response.header.Access-Control-Allow-Origin": "'*'",
+              },
+              "StatusCode": "204",
+            },
+          ],
+          "RequestTemplates": {
+            "application/json": "{ statusCode: 200 }",
+          },
+          "Type": "MOCK",
+        },
+        "MethodResponses": [
+          {
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Headers": true,
+              "method.response.header.Access-Control-Allow-Methods": true,
+              "method.response.header.Access-Control-Allow-Origin": true,
+            },
+            "StatusCode": "204",
+          },
+        ],
+        "ResourceId": {
+          "Ref": "RestApireferralcodequeue3A796C32",
+        },
+        "RestApiId": {
+          "Ref": "RestApi0C43BF4B",
+        },
+      },
+      "Type": "AWS::ApiGateway::Method",
+    },
+    "RestApireferralcodequeuePOSTApiPermissionContributionsReferralsCODERestApi3B38FE32POSTreferralcodequeueA3C79500": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "createcode99666EC6",
+            "Arn",
+          ],
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:",
+              {
+                "Ref": "AWS::Region",
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              ":",
+              {
+                "Ref": "RestApi0C43BF4B",
+              },
+              "/",
+              {
+                "Ref": "RestApiDeploymentStageprod3855DE66",
+              },
+              "/POST/referral-code-queue",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "RestApireferralcodequeuePOSTApiPermissionTestContributionsReferralsCODERestApi3B38FE32POSTreferralcodequeue5A039F5B": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "createcode99666EC6",
+            "Arn",
+          ],
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:",
+              {
+                "Ref": "AWS::Region",
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              ":",
+              {
+                "Ref": "RestApi0C43BF4B",
+              },
+              "/test-invoke-stage/POST/referral-code-queue",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "RestApireferralcodequeuePOSTD307C6F3": {
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "POST",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":apigateway:",
+                {
+                  "Ref": "AWS::Region",
+                },
+                ":lambda:path/2015-03-31/functions/",
+                {
+                  "Fn::GetAtt": [
+                    "createcode99666EC6",
+                    "Arn",
+                  ],
+                },
+                "/invocations",
+              ],
+            ],
+          },
+        },
+        "ResourceId": {
+          "Ref": "RestApireferralcodequeue3A796C32",
+        },
+        "RestApiId": {
+          "Ref": "RestApi0C43BF4B",
+        },
+      },
+      "Type": "AWS::ApiGateway::Method",
+    },
+    "RestApireferralcountDA304AD4": {
+      "Properties": {
+        "ParentId": {
+          "Fn::GetAtt": [
+            "RestApi0C43BF4B",
+            "RootResourceId",
+          ],
+        },
+        "PathPart": "referral-count",
+        "RestApiId": {
+          "Ref": "RestApi0C43BF4B",
+        },
+      },
+      "Type": "AWS::ApiGateway::Resource",
+    },
+    "RestApireferralcountGETApiPermissionContributionsReferralsCODERestApi3B38FE32GETreferralcount8A5CAD2F": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "referralcountA258C9F6",
+            "Arn",
+          ],
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:",
+              {
+                "Ref": "AWS::Region",
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              ":",
+              {
+                "Ref": "RestApi0C43BF4B",
+              },
+              "/",
+              {
+                "Ref": "RestApiDeploymentStageprod3855DE66",
+              },
+              "/GET/referral-count",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "RestApireferralcountGETApiPermissionTestContributionsReferralsCODERestApi3B38FE32GETreferralcount05A4220B": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "referralcountA258C9F6",
+            "Arn",
+          ],
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:",
+              {
+                "Ref": "AWS::Region",
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              ":",
+              {
+                "Ref": "RestApi0C43BF4B",
+              },
+              "/test-invoke-stage/GET/referral-count",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "RestApireferralcountGETD4B46E92": {
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "GET",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":apigateway:",
+                {
+                  "Ref": "AWS::Region",
+                },
+                ":lambda:path/2015-03-31/functions/",
+                {
+                  "Fn::GetAtt": [
+                    "referralcountA258C9F6",
+                    "Arn",
+                  ],
+                },
+                "/invocations",
+              ],
+            ],
+          },
+        },
+        "ResourceId": {
+          "Ref": "RestApireferralcountDA304AD4",
+        },
+        "RestApiId": {
+          "Ref": "RestApi0C43BF4B",
+        },
+      },
+      "Type": "AWS::ApiGateway::Method",
+    },
+    "RestApireferralcountOPTIONSFB971E18": {
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "OPTIONS",
+        "Integration": {
+          "IntegrationResponses": [
+            {
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type'",
+                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'",
+                "method.response.header.Access-Control-Allow-Origin": "'*'",
+              },
+              "StatusCode": "204",
+            },
+          ],
+          "RequestTemplates": {
+            "application/json": "{ statusCode: 200 }",
+          },
+          "Type": "MOCK",
+        },
+        "MethodResponses": [
+          {
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Headers": true,
+              "method.response.header.Access-Control-Allow-Methods": true,
+              "method.response.header.Access-Control-Allow-Origin": true,
+            },
+            "StatusCode": "204",
+          },
+        ],
+        "ResourceId": {
+          "Ref": "RestApireferralcountDA304AD4",
+        },
+        "RestApiId": {
+          "Ref": "RestApi0C43BF4B",
+        },
+      },
+      "Type": "AWS::ApiGateway::Method",
+    },
+    "S3inlinepolicy3B07399A": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "s3:GetObject",
+              "Effect": "Allow",
+              "Resource": "arn:aws:s3::*:membership-dist/*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "S3inlinepolicy3B07399A",
+        "Roles": [
+          {
+            "Ref": "createcodeServiceRole8439DE88",
+          },
+          {
+            "Ref": "referralcountServiceRoleA327D61C",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "SSMinlinepolicyB56CB2A2": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "ssm:GetParametersByPath",
+                "ssm:GetParameter",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:ssm:",
+                      {
+                        "Ref": "AWS::Region",
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":parameter/contributions-referrals/db-config/CODE",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:ssm:",
+                      {
+                        "Ref": "AWS::Region",
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":parameter/contributions-referrals/idapi/CODE/*",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:ssm:",
+                      {
+                        "Ref": "AWS::Region",
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":parameter/CODE/support/contributions-referrals/db-config",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:ssm:",
+                      {
+                        "Ref": "AWS::Region",
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":parameter/CODE/support/contributions-referrals/idapi/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "SSMinlinepolicyB56CB2A2",
+        "Roles": [
+          {
+            "Ref": "createcodeServiceRole8439DE88",
+          },
+          {
+            "Ref": "referralcountServiceRoleA327D61C",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
     },
     "UsagePlan": {
       "DependsOn": [
@@ -957,7 +1730,7 @@ exports[`The ContributionsReferrals stack matches the snapshot 1`] = `
           },
           {
             "Key": "Stage",
-            "Value": "TEST",
+            "Value": "CODE",
           },
         ],
         "UsagePlanName": {
@@ -1060,7 +1833,7 @@ exports[`The ContributionsReferrals stack matches the snapshot 1`] = `
           },
           {
             "Key": "Stage",
-            "Value": "TEST",
+            "Value": "CODE",
           },
         ],
         "Timeout": 30,
@@ -1165,11 +1938,2883 @@ exports[`The ContributionsReferrals stack matches the snapshot 1`] = `
           },
           {
             "Key": "Stage",
-            "Value": "TEST",
+            "Value": "CODE",
           },
         ],
       },
       "Type": "AWS::IAM::Role",
+    },
+    "createcode99666EC6": {
+      "DependsOn": [
+        "createcodeServiceRoleDefaultPolicy17CF1954",
+        "createcodeServiceRole8439DE88",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "DistributionBucketName",
+          },
+          "S3Key": "support/CODE/contributions-referrals/contributions-referrals.zip",
+        },
+        "Environment": {
+          "Variables": {
+            "APP": "contributions-referrals",
+            "STACK": "support",
+            "STAGE": "CODE",
+            "Stage": "CODE",
+          },
+        },
+        "FunctionName": "contributions-referrals-create-code-CODE-CDK",
+        "Handler": "create-code/lambda/lambda.handler",
+        "MemorySize": 512,
+        "Role": {
+          "Fn::GetAtt": [
+            "createcodeServiceRole8439DE88",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs16.x",
+        "Tags": [
+          {
+            "Key": "App",
+            "Value": "contributions-referrals",
+          },
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/contributions-referrals",
+          },
+          {
+            "Key": "Stack",
+            "Value": "support",
+          },
+          {
+            "Key": "Stage",
+            "Value": "CODE",
+          },
+        ],
+        "Timeout": 30,
+        "VpcConfig": {
+          "SecurityGroupIds": [
+            {
+              "Ref": "SecurityGroupToAccessPostgresCDK",
+            },
+          ],
+          "SubnetIds": {
+            "Ref": "PrivateSubnets",
+          },
+        },
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "createcodeServiceRole8439DE88": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole",
+              ],
+            ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "App",
+            "Value": "contributions-referrals",
+          },
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/contributions-referrals",
+          },
+          {
+            "Key": "Stack",
+            "Value": "support",
+          },
+          {
+            "Key": "Stage",
+            "Value": "CODE",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "createcodeServiceRoleDefaultPolicy17CF1954": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "s3:GetObject*",
+                "s3:GetBucket*",
+                "s3:List*",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":s3:::",
+                      {
+                        "Ref": "DistributionBucketName",
+                      },
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":s3:::",
+                      {
+                        "Ref": "DistributionBucketName",
+                      },
+                      "/support/CODE/contributions-referrals/contributions-referrals.zip",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": "ssm:GetParametersByPath",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:ssm:",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":parameter/CODE/support/contributions-referrals",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "ssm:GetParameters",
+                "ssm:GetParameter",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:ssm:",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":parameter/CODE/support/contributions-referrals/*",
+                  ],
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "createcodeServiceRoleDefaultPolicy17CF1954",
+        "Roles": [
+          {
+            "Ref": "createcodeServiceRole8439DE88",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "referralcountA258C9F6": {
+      "DependsOn": [
+        "referralcountServiceRoleDefaultPolicy46E43BAE",
+        "referralcountServiceRoleA327D61C",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "DistributionBucketName",
+          },
+          "S3Key": "support/CODE/contributions-referrals/contributions-referrals.zip",
+        },
+        "Environment": {
+          "Variables": {
+            "APP": "contributions-referrals",
+            "STACK": "support",
+            "STAGE": "CODE",
+            "Stage": "CODE",
+          },
+        },
+        "FunctionName": "contributions-referrals-referral-count-CODE-CDK",
+        "Handler": "referral-count/lambda/lambda.handler",
+        "MemorySize": 512,
+        "Role": {
+          "Fn::GetAtt": [
+            "referralcountServiceRoleA327D61C",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs16.x",
+        "Tags": [
+          {
+            "Key": "App",
+            "Value": "contributions-referrals",
+          },
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/contributions-referrals",
+          },
+          {
+            "Key": "Stack",
+            "Value": "support",
+          },
+          {
+            "Key": "Stage",
+            "Value": "CODE",
+          },
+        ],
+        "Timeout": 30,
+        "VpcConfig": {
+          "SecurityGroupIds": [
+            {
+              "Ref": "SecurityGroupToAccessPostgresCDK",
+            },
+          ],
+          "SubnetIds": {
+            "Ref": "PrivateSubnets",
+          },
+        },
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "referralcountServiceRoleA327D61C": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole",
+              ],
+            ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "App",
+            "Value": "contributions-referrals",
+          },
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/contributions-referrals",
+          },
+          {
+            "Key": "Stack",
+            "Value": "support",
+          },
+          {
+            "Key": "Stage",
+            "Value": "CODE",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "referralcountServiceRoleDefaultPolicy46E43BAE": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "s3:GetObject*",
+                "s3:GetBucket*",
+                "s3:List*",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":s3:::",
+                      {
+                        "Ref": "DistributionBucketName",
+                      },
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":s3:::",
+                      {
+                        "Ref": "DistributionBucketName",
+                      },
+                      "/support/CODE/contributions-referrals/contributions-referrals.zip",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": "ssm:GetParametersByPath",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:ssm:",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":parameter/CODE/support/contributions-referrals",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "ssm:GetParameters",
+                "ssm:GetParameter",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:ssm:",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":parameter/CODE/support/contributions-referrals/*",
+                  ],
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "referralcountServiceRoleDefaultPolicy46E43BAE",
+        "Roles": [
+          {
+            "Ref": "referralcountServiceRoleA327D61C",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+  },
+}
+`;
+
+exports[`The ContributionsReferrals stack matches the snapshot 2`] = `
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Conditions": {
+    "IsProd": {
+      "Fn::Equals": [
+        {
+          "Ref": "Stage",
+        },
+        "PROD",
+      ],
+    },
+  },
+  "Description": "The lambda to write referral codes to RDS",
+  "Mappings": {
+    "StageMap": {
+      "CODE": {
+        "CorsOrigin": "'*'",
+        "DomainName": "contribution-referrals-code.support.guardianapis.com",
+      },
+      "PROD": {
+        "CorsOrigin": "'*'",
+        "DomainName": "contribution-referrals.support.guardianapis.com",
+      },
+    },
+  },
+  "Metadata": {
+    "gu:cdk:constructs": [
+      "GuStringParameter",
+      "GuVpcParameter",
+      "GuSubnetListParameter",
+      "GuDistributionBucketParameter",
+      "GuLambdaFunction",
+      "GuLambdaFunction",
+      "GuApiGatewayWithLambdaByPath",
+      "GuApiGateway5xxPercentageAlarm",
+    ],
+    "gu:cdk:version": "TEST",
+  },
+  "Outputs": {
+    "RestApiEndpoint0551178A": {
+      "Value": {
+        "Fn::Join": [
+          "",
+          [
+            "https://",
+            {
+              "Ref": "RestApi0C43BF4B",
+            },
+            ".execute-api.",
+            {
+              "Ref": "AWS::Region",
+            },
+            ".",
+            {
+              "Ref": "AWS::URLSuffix",
+            },
+            "/",
+            {
+              "Ref": "RestApiDeploymentStageprod3855DE66",
+            },
+            "/",
+          ],
+        ],
+      },
+    },
+  },
+  "Parameters": {
+    "CertificateArn": {
+      "Description": "ARN of the certificate",
+      "Type": "String",
+    },
+    "DeployBucket": {
+      "Default": "membership-dist",
+      "Description": "Bucket to copy files to",
+      "Type": "String",
+    },
+    "DistributionBucketName": {
+      "Default": "/account/services/artifact.bucket",
+      "Description": "SSM parameter containing the S3 bucket name holding distribution artifacts",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "PrivateSubnets": {
+      "Default": "/account/vpc/primary/subnets/private",
+      "Description": "A list of private subnets",
+      "Type": "AWS::SSM::Parameter::Value<List<AWS::EC2::Subnet::Id>>",
+    },
+    "SecurityGroupToAccessPostgres": {
+      "Description": "Security group to access the RDS instance",
+      "Type": "String",
+    },
+    "SecurityGroupToAccessPostgresCDK": {
+      "Description": "Security group to access the RDS instance",
+      "Type": "String",
+    },
+    "Stack": {
+      "Default": "support",
+      "Description": "Stack name",
+      "Type": "String",
+    },
+    "Stage": {
+      "AllowedValues": [
+        "CODE",
+        "PROD",
+      ],
+      "Description": "Set by RiffRaff on each deploy",
+      "Type": "String",
+    },
+    "StreamArn": {
+      "Description": "ARN of the kinesis stream",
+      "Type": "String",
+    },
+    "VpcId": {
+      "Default": "/account/vpc/primary/id",
+      "Description": "Virtual Private Cloud to run EC2 instances within. Should NOT be the account default VPC.",
+      "Type": "AWS::SSM::Parameter::Value<AWS::EC2::VPC::Id>",
+    },
+    "VpcSubnets": {
+      "Description": "Subnets for RDS access",
+      "Type": "List<AWS::EC2::Subnet::Id>",
+    },
+  },
+  "Resources": {
+    "APIKey": {
+      "DependsOn": [
+        "ApiGatewayProdStage",
+      ],
+      "Properties": {
+        "Description": "Key required for requests from braze",
+        "Enabled": true,
+        "Name": {
+          "Fn::Sub": "contributions-referrals-api-key-\${Stage}",
+        },
+        "StageKeys": [
+          {
+            "RestApiId": {
+              "Ref": "ApiGateway",
+            },
+            "StageName": {
+              "Fn::Sub": "Prod",
+            },
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/contributions-referrals",
+          },
+          {
+            "Key": "Stack",
+            "Value": "support",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
+      },
+      "Type": "AWS::ApiGateway::ApiKey",
+    },
+    "ApiGateway": {
+      "Properties": {
+        "Body": {
+          "definitions": {
+            "Empty": {
+              "title": "Empty Schema",
+              "type": "object",
+            },
+          },
+          "info": {
+            "title": {
+              "Ref": "AWS::StackName",
+            },
+          },
+          "paths": {
+            "/referral-code-queue": {
+              "options": {
+                "consumes": [
+                  "application/json",
+                ],
+                "produces": [
+                  "application/json",
+                ],
+                "responses": {
+                  "200": {
+                    "description": "Default response for CORS method",
+                    "headers": {
+                      "Access-Control-Allow-Headers": {
+                        "type": "string",
+                      },
+                      "Access-Control-Allow-Methods": {
+                        "type": "string",
+                      },
+                      "Access-Control-Allow-Origin": {
+                        "type": "string",
+                      },
+                    },
+                  },
+                },
+                "summary": "CORS support",
+                "x-amazon-apigateway-integration": {
+                  "requestTemplates": {
+                    "application/json": "{
+  "statusCode" : 200
+}
+",
+                  },
+                  "responses": {
+                    "default": {
+                      "responseParameters": {
+                        "method.response.header.Access-Control-Allow-Headers": "'Content-Type'",
+                        "method.response.header.Access-Control-Allow-Methods": "'*'",
+                        "method.response.header.Access-Control-Allow-Origin": {
+                          "Fn::FindInMap": [
+                            "StageMap",
+                            {
+                              "Ref": "Stage",
+                            },
+                            "CorsOrigin",
+                          ],
+                        },
+                      },
+                      "responseTemplates": {
+                        "application/json": "{}
+",
+                      },
+                      "statusCode": "200",
+                    },
+                  },
+                  "type": "mock",
+                },
+              },
+              "post": {
+                "consumes": [
+                  "application/json",
+                ],
+                "produces": [
+                  "application/json",
+                ],
+                "responses": {
+                  "200": {
+                    "description": "200 response",
+                    "schema": {
+                      "$ref": "#/definitions/Empty",
+                    },
+                  },
+                },
+                "x-amazon-apigateway-integration": {
+                  "credentials": {
+                    "Fn::GetAtt": "ApiGatewayRole.Arn",
+                  },
+                  "httpMethod": "POST",
+                  "passthroughBehavior": "never",
+                  "requestParameters": {
+                    "integration.request.header.Content-Type": "'application/x-www-form-urlencoded'",
+                  },
+                  "requestTemplates": {
+                    "application/json": {
+                      "Fn::Sub": "Action=SendMessage##
+&QueueUrl=$util.urlEncode('\${ReferralCodeQueue}')##
+&MessageBody=$util.urlEncode($input.body)##
+",
+                    },
+                  },
+                  "responses": {
+                    "default": {
+                      "responseTemplates": {
+                        "application/json": "#set($inputRoot = $input.path('$'))",
+                      },
+                      "statusCode": "200",
+                    },
+                  },
+                  "type": "aws",
+                  "uri": {
+                    "Fn::Sub": "arn:aws:apigateway:\${AWS::Region}:sqs:path//",
+                  },
+                },
+              },
+            },
+            "/referral-count": {
+              "get": {
+                "responses": {
+                  "200": {
+                    "description": "200 response",
+                    "schema": {
+                      "$ref": "#/definitions/Empty",
+                    },
+                  },
+                },
+                "x-amazon-apigateway-integration": {
+                  "credentials": {
+                    "Fn::GetAtt": "ApiGatewayRole.Arn",
+                  },
+                  "httpMethod": "POST",
+                  "passthroughBehavior": "when_no_match",
+                  "responses": {
+                    "default": {
+                      "statusCode": "200",
+                    },
+                  },
+                  "type": "aws_proxy",
+                  "uri": {
+                    "Fn::Sub": "arn:aws:apigateway:\${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:\${AWS::Region}:\${AWS::AccountId}:function:\${ReferralCountLambda}/invocations",
+                  },
+                },
+              },
+              "options": {
+                "consumes": [
+                  "application/json",
+                ],
+                "produces": [
+                  "application/json",
+                ],
+                "responses": {
+                  "200": {
+                    "description": "Default response for CORS method",
+                    "headers": {
+                      "Access-Control-Allow-Headers": {
+                        "type": "string",
+                      },
+                      "Access-Control-Allow-Methods": {
+                        "type": "string",
+                      },
+                      "Access-Control-Allow-Origin": {
+                        "type": "string",
+                      },
+                    },
+                  },
+                },
+                "summary": "CORS support",
+                "x-amazon-apigateway-integration": {
+                  "requestTemplates": {
+                    "application/json": "{
+  "statusCode" : 200
+}
+",
+                  },
+                  "responses": {
+                    "default": {
+                      "responseParameters": {
+                        "method.response.header.Access-Control-Allow-Headers": "'Content-Type'",
+                        "method.response.header.Access-Control-Allow-Methods": "'*'",
+                        "method.response.header.Access-Control-Allow-Origin": {
+                          "Fn::FindInMap": [
+                            "StageMap",
+                            {
+                              "Ref": "Stage",
+                            },
+                            "CorsOrigin",
+                          ],
+                        },
+                      },
+                      "responseTemplates": {
+                        "application/json": "{}
+",
+                      },
+                      "statusCode": "200",
+                    },
+                  },
+                  "type": "mock",
+                },
+              },
+            },
+          },
+          "swagger": "2.0",
+        },
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/contributions-referrals",
+          },
+          {
+            "Key": "Stack",
+            "Value": "support",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
+      },
+      "Type": "AWS::ApiGateway::RestApi",
+    },
+    "ApiGatewayDeployment74510d2de2": {
+      "Properties": {
+        "Description": "RestApi deployment id: 74510d2de2ad9e61fffe9a71ce075ba06321e21c",
+        "RestApiId": {
+          "Ref": "ApiGateway",
+        },
+        "StageName": "Stage",
+      },
+      "Type": "AWS::ApiGateway::Deployment",
+    },
+    "ApiGatewayHigh5xxPercentageAlarmContributionsreferrals8DE04ED5": {
+      "Properties": {
+        "ActionsEnabled": true,
+        "AlarmActions": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:aws:sns:",
+                {
+                  "Ref": "AWS::Region",
+                },
+                ":",
+                {
+                  "Ref": "AWS::AccountId",
+                },
+                ":conversion-dev",
+              ],
+            ],
+          },
+        ],
+        "AlarmDescription": "contributions-referrals exceeded 1% error rate",
+        "AlarmName": "High 5XX error % from contributions-referrals (ApiGateway) in PROD",
+        "ComparisonOperator": "GreaterThanThreshold",
+        "EvaluationPeriods": 1,
+        "Metrics": [
+          {
+            "Expression": "100*m1/m2",
+            "Id": "expr_1",
+            "Label": "% of 5XX responses served for contributions-referrals",
+          },
+          {
+            "Id": "m1",
+            "MetricStat": {
+              "Metric": {
+                "Dimensions": [
+                  {
+                    "Name": "ApiName",
+                    "Value": "support-PROD-contributions-referrals",
+                  },
+                ],
+                "MetricName": "5XXError",
+                "Namespace": "AWS/ApiGateway",
+              },
+              "Period": 60,
+              "Stat": "Sum",
+            },
+            "ReturnData": false,
+          },
+          {
+            "Id": "m2",
+            "MetricStat": {
+              "Metric": {
+                "Dimensions": [
+                  {
+                    "Name": "ApiName",
+                    "Value": "support-PROD-contributions-referrals",
+                  },
+                ],
+                "MetricName": "Count",
+                "Namespace": "AWS/ApiGateway",
+              },
+              "Period": 60,
+              "Stat": "SampleCount",
+            },
+            "ReturnData": false,
+          },
+        ],
+        "Threshold": 1,
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
+    "ApiGatewayProdStage": {
+      "Properties": {
+        "DeploymentId": {
+          "Ref": "ApiGatewayDeployment74510d2de2",
+        },
+        "RestApiId": {
+          "Ref": "ApiGateway",
+        },
+        "StageName": "Prod",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/contributions-referrals",
+          },
+          {
+            "Key": "Stack",
+            "Value": "support",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
+      },
+      "Type": "AWS::ApiGateway::Stage",
+    },
+    "ApiGatewayRole": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "apigateway.amazonaws.com",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          "arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs",
+        ],
+        "Path": "/",
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "sqs:ReceiveMessage",
+                    "sqs:SendMessage",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": {
+                    "Fn::GetAtt": "ReferralCodeQueue.Arn",
+                  },
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "ApiQueuePolicy",
+          },
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "lambda:InvokeFunction",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": {
+                    "Fn::GetAtt": "ReferralCountLambda.Arn",
+                  },
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "LambdaInvokePolicy",
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/contributions-referrals",
+          },
+          {
+            "Key": "Stack",
+            "Value": "support",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "BasePathMapping": {
+      "DependsOn": [
+        "ApiGatewayProdStage",
+      ],
+      "Properties": {
+        "DomainName": {
+          "Ref": "DomainName",
+        },
+        "RestApiId": {
+          "Ref": "ApiGateway",
+        },
+        "Stage": {
+          "Fn::Sub": "Prod",
+        },
+      },
+      "Type": "AWS::ApiGateway::BasePathMapping",
+    },
+    "BrazeUploadAlarm": {
+      "Condition": "IsProd",
+      "Properties": {
+        "AlarmActions": [
+          {
+            "Fn::Sub": "arn:aws:sns:\${AWS::Region}:\${AWS::AccountId}:contributions-dev",
+          },
+        ],
+        "AlarmDescription": "Referral may not have been recorded",
+        "AlarmName": "Failed to process acquisition in braze-upload lambda",
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "Dimensions": [
+          {
+            "Name": "FunctionName",
+            "Value": {
+              "Ref": "BrazeUploadLambda",
+            },
+          },
+        ],
+        "EvaluationPeriods": 1,
+        "MetricName": "Errors",
+        "Namespace": "AWS/Lambda",
+        "Period": 600,
+        "Statistic": "Sum",
+        "Threshold": 1,
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
+    "BrazeUploadLambda": {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "DeployBucket",
+          },
+          "S3Key": {
+            "Fn::Sub": "\${Stack}/\${Stage}/contributions-referrals/contributions-referrals.zip",
+          },
+        },
+        "Description": "The lambda to send referrals data to Braze",
+        "Environment": {
+          "Variables": {
+            "Stage": {
+              "Ref": "Stage",
+            },
+          },
+        },
+        "FunctionName": {
+          "Fn::Sub": "contributions-referrals-braze-upload-\${Stage}",
+        },
+        "Handler": "braze-upload/lambda/lambda.handler",
+        "MemorySize": 128,
+        "Role": {
+          "Fn::GetAtt": [
+            "BrazeUploadLambdaRole",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs16.x",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/contributions-referrals",
+          },
+          {
+            "Key": "lambda:createdBy",
+            "Value": "SAM",
+          },
+          {
+            "Key": "Stack",
+            "Value": "support",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
+        "Timeout": 30,
+        "VpcConfig": {
+          "SecurityGroupIds": [
+            {
+              "Ref": "SecurityGroupToAccessPostgres",
+            },
+          ],
+          "SubnetIds": {
+            "Ref": "VpcSubnets",
+          },
+        },
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "BrazeUploadLambdaRole": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "sts:AssumeRole",
+              ],
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "lambda.amazonaws.com",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole",
+        ],
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": {
+                "Action": [
+                  "ssm:GetParametersByPath",
+                  "ssm:GetParameter",
+                ],
+                "Effect": "Allow",
+                "Resource": [
+                  {
+                    "Fn::Sub": "arn:aws:ssm:\${AWS::Region}:\${AWS::AccountId}:parameter/contributions-referrals/db-config/\${Stage}",
+                  },
+                  {
+                    "Fn::Sub": "arn:aws:ssm:\${AWS::Region}:\${AWS::AccountId}:parameter/contributions-referrals/braze/\${Stage}/*",
+                  },
+                ],
+              },
+            },
+            "PolicyName": "BrazeUploadLambdaRolePolicy1",
+          },
+          {
+            "PolicyDocument": {
+              "Statement": {
+                "Action": "s3:GetObject",
+                "Effect": "Allow",
+                "Resource": [
+                  "arn:aws:s3::*:membership-dist/*",
+                ],
+              },
+            },
+            "PolicyName": "BrazeUploadLambdaRolePolicy2",
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/contributions-referrals",
+          },
+          {
+            "Key": "lambda:createdBy",
+            "Value": "SAM",
+          },
+          {
+            "Key": "Stack",
+            "Value": "support",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "DNSRecord": {
+      "Properties": {
+        "Comment": {
+          "Fn::Sub": "CNAME for contributions referrals endpoint \${Stage}",
+        },
+        "HostedZoneName": "support.guardianapis.com.",
+        "Name": {
+          "Fn::FindInMap": [
+            "StageMap",
+            {
+              "Ref": "Stage",
+            },
+            "DomainName",
+          ],
+        },
+        "ResourceRecords": [
+          {
+            "Fn::GetAtt": [
+              "DomainName",
+              "RegionalDomainName",
+            ],
+          },
+        ],
+        "TTL": "120",
+        "Type": "CNAME",
+      },
+      "Type": "AWS::Route53::RecordSet",
+    },
+    "DomainName": {
+      "Properties": {
+        "DomainName": {
+          "Fn::FindInMap": [
+            "StageMap",
+            {
+              "Ref": "Stage",
+            },
+            "DomainName",
+          ],
+        },
+        "EndpointConfiguration": {
+          "Types": [
+            "REGIONAL",
+          ],
+        },
+        "RegionalCertificateArn": {
+          "Ref": "CertificateArn",
+        },
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/contributions-referrals",
+          },
+          {
+            "Key": "Stack",
+            "Value": "support",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
+      },
+      "Type": "AWS::ApiGateway::DomainName",
+    },
+    "ReferralCodeQueue": {
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/contributions-referrals",
+          },
+          {
+            "Key": "Stack",
+            "Value": "support",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+    },
+    "ReferralCountAlarm": {
+      "Condition": "IsProd",
+      "Properties": {
+        "AlarmActions": [
+          {
+            "Fn::Sub": "arn:aws:sns:\${AWS::Region}:\${AWS::AccountId}:contributions-dev",
+          },
+        ],
+        "AlarmDescription": "Braze was unable to fetch a referral count",
+        "AlarmName": "Request for a referral count failed",
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "Dimensions": [
+          {
+            "Name": "FunctionName",
+            "Value": {
+              "Ref": "ReferralCountLambda",
+            },
+          },
+        ],
+        "EvaluationPeriods": 1,
+        "MetricName": "Errors",
+        "Namespace": "AWS/Lambda",
+        "Period": 600,
+        "Statistic": "Sum",
+        "Threshold": 1,
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
+    "ReferralCountLambda": {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "DeployBucket",
+          },
+          "S3Key": {
+            "Fn::Sub": "\${Stack}/\${Stage}/contributions-referrals/contributions-referrals.zip",
+          },
+        },
+        "Description": "A lambda for fetching a referral count for a braze user",
+        "Environment": {
+          "Variables": {
+            "Stage": {
+              "Ref": "Stage",
+            },
+          },
+        },
+        "FunctionName": {
+          "Fn::Sub": "contributions-referrals-referral-count-\${Stage}",
+        },
+        "Handler": "referral-count/lambda/lambda.handler",
+        "MemorySize": 128,
+        "Role": {
+          "Fn::GetAtt": [
+            "ReferralCountLambdaRole",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs16.x",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/contributions-referrals",
+          },
+          {
+            "Key": "lambda:createdBy",
+            "Value": "SAM",
+          },
+          {
+            "Key": "Stack",
+            "Value": "support",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
+        "Timeout": 30,
+        "VpcConfig": {
+          "SecurityGroupIds": [
+            {
+              "Ref": "SecurityGroupToAccessPostgres",
+            },
+          ],
+          "SubnetIds": {
+            "Ref": "VpcSubnets",
+          },
+        },
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "ReferralCountLambdaHttpGetPermissionProd": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Ref": "ReferralCountLambda",
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Sub": [
+            "arn:aws:execute-api:\${AWS::Region}:\${AWS::AccountId}:\${__ApiId__}/\${__Stage__}/GET/referral-count",
+            {
+              "__ApiId__": {
+                "Ref": "ApiGateway",
+              },
+              "__Stage__": "*",
+            },
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "ReferralCountLambdaRole": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "sts:AssumeRole",
+              ],
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "lambda.amazonaws.com",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole",
+        ],
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": {
+                "Action": [
+                  "ssm:GetParametersByPath",
+                  "ssm:GetParameter",
+                ],
+                "Effect": "Allow",
+                "Resource": [
+                  {
+                    "Fn::Sub": "arn:aws:ssm:\${AWS::Region}:\${AWS::AccountId}:parameter/contributions-referrals/db-config/\${Stage}",
+                  },
+                ],
+              },
+            },
+            "PolicyName": "ReferralCountLambdaRolePolicy1",
+          },
+          {
+            "PolicyDocument": {
+              "Statement": {
+                "Action": "s3:GetObject",
+                "Effect": "Allow",
+                "Resource": [
+                  "arn:aws:s3::*:membership-dist/*",
+                ],
+              },
+            },
+            "PolicyName": "ReferralCountLambdaRolePolicy2",
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/contributions-referrals",
+          },
+          {
+            "Key": "lambda:createdBy",
+            "Value": "SAM",
+          },
+          {
+            "Key": "Stack",
+            "Value": "support",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "RestApi0C43BF4B": {
+      "Properties": {
+        "Name": "support-PROD-contributions-referrals",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/contributions-referrals",
+          },
+          {
+            "Key": "Stack",
+            "Value": "support",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
+      },
+      "Type": "AWS::ApiGateway::RestApi",
+    },
+    "RestApiAccount7C83CF5A": {
+      "DeletionPolicy": "Retain",
+      "DependsOn": [
+        "RestApi0C43BF4B",
+      ],
+      "Properties": {
+        "CloudWatchRoleArn": {
+          "Fn::GetAtt": [
+            "RestApiCloudWatchRoleE3ED6605",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::ApiGateway::Account",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "RestApiCloudWatchRoleE3ED6605": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "apigateway.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs",
+              ],
+            ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/contributions-referrals",
+          },
+          {
+            "Key": "Stack",
+            "Value": "support",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "RestApiDeployment180EC5030db523b2490b86c4fd266ac85794fcb5": {
+      "DependsOn": [
+        "RestApiOPTIONS6AA64D2D",
+        "RestApireferralcodequeueOPTIONS59126137",
+        "RestApireferralcodequeuePOSTD307C6F3",
+        "RestApireferralcodequeue3A796C32",
+        "RestApireferralcountGETD4B46E92",
+        "RestApireferralcountOPTIONSFB971E18",
+        "RestApireferralcountDA304AD4",
+      ],
+      "Properties": {
+        "Description": "Automatically created by the RestApi construct",
+        "RestApiId": {
+          "Ref": "RestApi0C43BF4B",
+        },
+      },
+      "Type": "AWS::ApiGateway::Deployment",
+    },
+    "RestApiDeploymentStageprod3855DE66": {
+      "DependsOn": [
+        "RestApiAccount7C83CF5A",
+      ],
+      "Properties": {
+        "DeploymentId": {
+          "Ref": "RestApiDeployment180EC5030db523b2490b86c4fd266ac85794fcb5",
+        },
+        "RestApiId": {
+          "Ref": "RestApi0C43BF4B",
+        },
+        "StageName": "prod",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/contributions-referrals",
+          },
+          {
+            "Key": "Stack",
+            "Value": "support",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
+      },
+      "Type": "AWS::ApiGateway::Stage",
+    },
+    "RestApiOPTIONS6AA64D2D": {
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "OPTIONS",
+        "Integration": {
+          "IntegrationResponses": [
+            {
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type'",
+                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'",
+                "method.response.header.Access-Control-Allow-Origin": "'*'",
+              },
+              "StatusCode": "204",
+            },
+          ],
+          "RequestTemplates": {
+            "application/json": "{ statusCode: 200 }",
+          },
+          "Type": "MOCK",
+        },
+        "MethodResponses": [
+          {
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Headers": true,
+              "method.response.header.Access-Control-Allow-Methods": true,
+              "method.response.header.Access-Control-Allow-Origin": true,
+            },
+            "StatusCode": "204",
+          },
+        ],
+        "ResourceId": {
+          "Fn::GetAtt": [
+            "RestApi0C43BF4B",
+            "RootResourceId",
+          ],
+        },
+        "RestApiId": {
+          "Ref": "RestApi0C43BF4B",
+        },
+      },
+      "Type": "AWS::ApiGateway::Method",
+    },
+    "RestApireferralcodequeue3A796C32": {
+      "Properties": {
+        "ParentId": {
+          "Fn::GetAtt": [
+            "RestApi0C43BF4B",
+            "RootResourceId",
+          ],
+        },
+        "PathPart": "referral-code-queue",
+        "RestApiId": {
+          "Ref": "RestApi0C43BF4B",
+        },
+      },
+      "Type": "AWS::ApiGateway::Resource",
+    },
+    "RestApireferralcodequeueOPTIONS59126137": {
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "OPTIONS",
+        "Integration": {
+          "IntegrationResponses": [
+            {
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type'",
+                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'",
+                "method.response.header.Access-Control-Allow-Origin": "'*'",
+              },
+              "StatusCode": "204",
+            },
+          ],
+          "RequestTemplates": {
+            "application/json": "{ statusCode: 200 }",
+          },
+          "Type": "MOCK",
+        },
+        "MethodResponses": [
+          {
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Headers": true,
+              "method.response.header.Access-Control-Allow-Methods": true,
+              "method.response.header.Access-Control-Allow-Origin": true,
+            },
+            "StatusCode": "204",
+          },
+        ],
+        "ResourceId": {
+          "Ref": "RestApireferralcodequeue3A796C32",
+        },
+        "RestApiId": {
+          "Ref": "RestApi0C43BF4B",
+        },
+      },
+      "Type": "AWS::ApiGateway::Method",
+    },
+    "RestApireferralcodequeuePOSTApiPermissionContributionsReferralsPRODRestApi817F2014POSTreferralcodequeue9A0E3C28": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "createcode99666EC6",
+            "Arn",
+          ],
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:",
+              {
+                "Ref": "AWS::Region",
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              ":",
+              {
+                "Ref": "RestApi0C43BF4B",
+              },
+              "/",
+              {
+                "Ref": "RestApiDeploymentStageprod3855DE66",
+              },
+              "/POST/referral-code-queue",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "RestApireferralcodequeuePOSTApiPermissionTestContributionsReferralsPRODRestApi817F2014POSTreferralcodequeueBE6BA355": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "createcode99666EC6",
+            "Arn",
+          ],
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:",
+              {
+                "Ref": "AWS::Region",
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              ":",
+              {
+                "Ref": "RestApi0C43BF4B",
+              },
+              "/test-invoke-stage/POST/referral-code-queue",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "RestApireferralcodequeuePOSTD307C6F3": {
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "POST",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":apigateway:",
+                {
+                  "Ref": "AWS::Region",
+                },
+                ":lambda:path/2015-03-31/functions/",
+                {
+                  "Fn::GetAtt": [
+                    "createcode99666EC6",
+                    "Arn",
+                  ],
+                },
+                "/invocations",
+              ],
+            ],
+          },
+        },
+        "ResourceId": {
+          "Ref": "RestApireferralcodequeue3A796C32",
+        },
+        "RestApiId": {
+          "Ref": "RestApi0C43BF4B",
+        },
+      },
+      "Type": "AWS::ApiGateway::Method",
+    },
+    "RestApireferralcountDA304AD4": {
+      "Properties": {
+        "ParentId": {
+          "Fn::GetAtt": [
+            "RestApi0C43BF4B",
+            "RootResourceId",
+          ],
+        },
+        "PathPart": "referral-count",
+        "RestApiId": {
+          "Ref": "RestApi0C43BF4B",
+        },
+      },
+      "Type": "AWS::ApiGateway::Resource",
+    },
+    "RestApireferralcountGETApiPermissionContributionsReferralsPRODRestApi817F2014GETreferralcountB3B72377": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "referralcountA258C9F6",
+            "Arn",
+          ],
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:",
+              {
+                "Ref": "AWS::Region",
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              ":",
+              {
+                "Ref": "RestApi0C43BF4B",
+              },
+              "/",
+              {
+                "Ref": "RestApiDeploymentStageprod3855DE66",
+              },
+              "/GET/referral-count",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "RestApireferralcountGETApiPermissionTestContributionsReferralsPRODRestApi817F2014GETreferralcount66EFA6DF": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "referralcountA258C9F6",
+            "Arn",
+          ],
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:",
+              {
+                "Ref": "AWS::Region",
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              ":",
+              {
+                "Ref": "RestApi0C43BF4B",
+              },
+              "/test-invoke-stage/GET/referral-count",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "RestApireferralcountGETD4B46E92": {
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "GET",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":apigateway:",
+                {
+                  "Ref": "AWS::Region",
+                },
+                ":lambda:path/2015-03-31/functions/",
+                {
+                  "Fn::GetAtt": [
+                    "referralcountA258C9F6",
+                    "Arn",
+                  ],
+                },
+                "/invocations",
+              ],
+            ],
+          },
+        },
+        "ResourceId": {
+          "Ref": "RestApireferralcountDA304AD4",
+        },
+        "RestApiId": {
+          "Ref": "RestApi0C43BF4B",
+        },
+      },
+      "Type": "AWS::ApiGateway::Method",
+    },
+    "RestApireferralcountOPTIONSFB971E18": {
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "OPTIONS",
+        "Integration": {
+          "IntegrationResponses": [
+            {
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type'",
+                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'",
+                "method.response.header.Access-Control-Allow-Origin": "'*'",
+              },
+              "StatusCode": "204",
+            },
+          ],
+          "RequestTemplates": {
+            "application/json": "{ statusCode: 200 }",
+          },
+          "Type": "MOCK",
+        },
+        "MethodResponses": [
+          {
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Headers": true,
+              "method.response.header.Access-Control-Allow-Methods": true,
+              "method.response.header.Access-Control-Allow-Origin": true,
+            },
+            "StatusCode": "204",
+          },
+        ],
+        "ResourceId": {
+          "Ref": "RestApireferralcountDA304AD4",
+        },
+        "RestApiId": {
+          "Ref": "RestApi0C43BF4B",
+        },
+      },
+      "Type": "AWS::ApiGateway::Method",
+    },
+    "S3inlinepolicy3B07399A": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "s3:GetObject",
+              "Effect": "Allow",
+              "Resource": "arn:aws:s3::*:membership-dist/*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "S3inlinepolicy3B07399A",
+        "Roles": [
+          {
+            "Ref": "createcodeServiceRole8439DE88",
+          },
+          {
+            "Ref": "referralcountServiceRoleA327D61C",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "SSMinlinepolicyB56CB2A2": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "ssm:GetParametersByPath",
+                "ssm:GetParameter",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:ssm:",
+                      {
+                        "Ref": "AWS::Region",
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":parameter/contributions-referrals/db-config/PROD",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:ssm:",
+                      {
+                        "Ref": "AWS::Region",
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":parameter/contributions-referrals/idapi/PROD/*",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:ssm:",
+                      {
+                        "Ref": "AWS::Region",
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":parameter/PROD/support/contributions-referrals/db-config",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:ssm:",
+                      {
+                        "Ref": "AWS::Region",
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":parameter/PROD/support/contributions-referrals/idapi/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "SSMinlinepolicyB56CB2A2",
+        "Roles": [
+          {
+            "Ref": "createcodeServiceRole8439DE88",
+          },
+          {
+            "Ref": "referralcountServiceRoleA327D61C",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "UsagePlan": {
+      "DependsOn": [
+        "ApiGatewayProdStage",
+      ],
+      "Properties": {
+        "ApiStages": [
+          {
+            "ApiId": {
+              "Ref": "ApiGateway",
+            },
+            "Stage": "Prod",
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/contributions-referrals",
+          },
+          {
+            "Key": "Stack",
+            "Value": "support",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
+        "UsagePlanName": {
+          "Fn::Sub": "contributions-referrals-api-usage-plan-\${Stage}",
+        },
+      },
+      "Type": "AWS::ApiGateway::UsagePlan",
+    },
+    "UsagePlanKey": {
+      "DependsOn": [
+        "APIKey",
+        "UsagePlan",
+      ],
+      "Properties": {
+        "KeyId": {
+          "Ref": "APIKey",
+        },
+        "KeyType": "API_KEY",
+        "UsagePlanId": {
+          "Ref": "UsagePlan",
+        },
+      },
+      "Type": "AWS::ApiGateway::UsagePlanKey",
+    },
+    "WriteReferralCodeToRdsAlarm": {
+      "Condition": "IsProd",
+      "Properties": {
+        "AlarmActions": [
+          {
+            "Fn::Sub": "arn:aws:sns:\${AWS::Region}:\${AWS::AccountId}:contributions-dev",
+          },
+        ],
+        "AlarmDescription": "User's referral code is not being stored",
+        "AlarmName": "Failed to write a referral code to the database",
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "Dimensions": [
+          {
+            "Name": "FunctionName",
+            "Value": {
+              "Ref": "WriteReferralCodeToRdsLambda",
+            },
+          },
+        ],
+        "EvaluationPeriods": 1,
+        "MetricName": "Errors",
+        "Namespace": "AWS/Lambda",
+        "Period": 600,
+        "Statistic": "Sum",
+        "Threshold": 1,
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
+    "WriteReferralCodeToRdsLambda": {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "DeployBucket",
+          },
+          "S3Key": {
+            "Fn::Sub": "\${Stack}/\${Stage}/contributions-referrals/contributions-referrals.zip",
+          },
+        },
+        "Description": "A lambda for saving referral codes to rds",
+        "Environment": {
+          "Variables": {
+            "Stage": {
+              "Ref": "Stage",
+            },
+          },
+        },
+        "FunctionName": {
+          "Fn::Sub": "contributions-referrals-create-code-\${Stage}",
+        },
+        "Handler": "create-code/lambda/lambda.handler",
+        "MemorySize": 128,
+        "ReservedConcurrentExecutions": 10,
+        "Role": {
+          "Fn::GetAtt": [
+            "WriteReferralCodeToRdsLambdaRole",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs16.x",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/contributions-referrals",
+          },
+          {
+            "Key": "lambda:createdBy",
+            "Value": "SAM",
+          },
+          {
+            "Key": "Stack",
+            "Value": "support",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
+        "Timeout": 30,
+        "VpcConfig": {
+          "SecurityGroupIds": [
+            {
+              "Ref": "SecurityGroupToAccessPostgres",
+            },
+          ],
+          "SubnetIds": {
+            "Ref": "VpcSubnets",
+          },
+        },
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "WriteReferralCodeToRdsLambdaQueueMessages": {
+      "Properties": {
+        "BatchSize": 10,
+        "EventSourceArn": {
+          "Fn::GetAtt": "ReferralCodeQueue.Arn",
+        },
+        "FunctionName": {
+          "Ref": "WriteReferralCodeToRdsLambda",
+        },
+      },
+      "Type": "AWS::Lambda::EventSourceMapping",
+    },
+    "WriteReferralCodeToRdsLambdaRole": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "sts:AssumeRole",
+              ],
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "lambda.amazonaws.com",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole",
+          "arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole",
+        ],
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": {
+                "Action": [
+                  "ssm:GetParametersByPath",
+                  "ssm:GetParameter",
+                ],
+                "Effect": "Allow",
+                "Resource": [
+                  {
+                    "Fn::Sub": "arn:aws:ssm:\${AWS::Region}:\${AWS::AccountId}:parameter/contributions-referrals/db-config/\${Stage}",
+                  },
+                  {
+                    "Fn::Sub": "arn:aws:ssm:\${AWS::Region}:\${AWS::AccountId}:parameter/contributions-referrals/idapi/\${Stage}/*",
+                  },
+                ],
+              },
+            },
+            "PolicyName": "WriteReferralCodeToRdsLambdaRolePolicy1",
+          },
+          {
+            "PolicyDocument": {
+              "Statement": {
+                "Action": "s3:GetObject",
+                "Effect": "Allow",
+                "Resource": [
+                  "arn:aws:s3::*:membership-dist/*",
+                ],
+              },
+            },
+            "PolicyName": "WriteReferralCodeToRdsLambdaRolePolicy2",
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/contributions-referrals",
+          },
+          {
+            "Key": "lambda:createdBy",
+            "Value": "SAM",
+          },
+          {
+            "Key": "Stack",
+            "Value": "support",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "createcode99666EC6": {
+      "DependsOn": [
+        "createcodeServiceRoleDefaultPolicy17CF1954",
+        "createcodeServiceRole8439DE88",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "DistributionBucketName",
+          },
+          "S3Key": "support/PROD/contributions-referrals/contributions-referrals.zip",
+        },
+        "Environment": {
+          "Variables": {
+            "APP": "contributions-referrals",
+            "STACK": "support",
+            "STAGE": "PROD",
+            "Stage": "PROD",
+          },
+        },
+        "FunctionName": "contributions-referrals-create-code-PROD-CDK",
+        "Handler": "create-code/lambda/lambda.handler",
+        "MemorySize": 512,
+        "Role": {
+          "Fn::GetAtt": [
+            "createcodeServiceRole8439DE88",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs16.x",
+        "Tags": [
+          {
+            "Key": "App",
+            "Value": "contributions-referrals",
+          },
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/contributions-referrals",
+          },
+          {
+            "Key": "Stack",
+            "Value": "support",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
+        "Timeout": 30,
+        "VpcConfig": {
+          "SecurityGroupIds": [
+            {
+              "Ref": "SecurityGroupToAccessPostgresCDK",
+            },
+          ],
+          "SubnetIds": {
+            "Ref": "PrivateSubnets",
+          },
+        },
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "createcodeServiceRole8439DE88": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole",
+              ],
+            ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "App",
+            "Value": "contributions-referrals",
+          },
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/contributions-referrals",
+          },
+          {
+            "Key": "Stack",
+            "Value": "support",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "createcodeServiceRoleDefaultPolicy17CF1954": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "s3:GetObject*",
+                "s3:GetBucket*",
+                "s3:List*",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":s3:::",
+                      {
+                        "Ref": "DistributionBucketName",
+                      },
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":s3:::",
+                      {
+                        "Ref": "DistributionBucketName",
+                      },
+                      "/support/PROD/contributions-referrals/contributions-referrals.zip",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": "ssm:GetParametersByPath",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:ssm:",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":parameter/PROD/support/contributions-referrals",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "ssm:GetParameters",
+                "ssm:GetParameter",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:ssm:",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":parameter/PROD/support/contributions-referrals/*",
+                  ],
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "createcodeServiceRoleDefaultPolicy17CF1954",
+        "Roles": [
+          {
+            "Ref": "createcodeServiceRole8439DE88",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "referralcountA258C9F6": {
+      "DependsOn": [
+        "referralcountServiceRoleDefaultPolicy46E43BAE",
+        "referralcountServiceRoleA327D61C",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "DistributionBucketName",
+          },
+          "S3Key": "support/PROD/contributions-referrals/contributions-referrals.zip",
+        },
+        "Environment": {
+          "Variables": {
+            "APP": "contributions-referrals",
+            "STACK": "support",
+            "STAGE": "PROD",
+            "Stage": "PROD",
+          },
+        },
+        "FunctionName": "contributions-referrals-referral-count-PROD-CDK",
+        "Handler": "referral-count/lambda/lambda.handler",
+        "MemorySize": 512,
+        "Role": {
+          "Fn::GetAtt": [
+            "referralcountServiceRoleA327D61C",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs16.x",
+        "Tags": [
+          {
+            "Key": "App",
+            "Value": "contributions-referrals",
+          },
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/contributions-referrals",
+          },
+          {
+            "Key": "Stack",
+            "Value": "support",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
+        "Timeout": 30,
+        "VpcConfig": {
+          "SecurityGroupIds": [
+            {
+              "Ref": "SecurityGroupToAccessPostgresCDK",
+            },
+          ],
+          "SubnetIds": {
+            "Ref": "PrivateSubnets",
+          },
+        },
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "referralcountServiceRoleA327D61C": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole",
+              ],
+            ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "App",
+            "Value": "contributions-referrals",
+          },
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/contributions-referrals",
+          },
+          {
+            "Key": "Stack",
+            "Value": "support",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "referralcountServiceRoleDefaultPolicy46E43BAE": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "s3:GetObject*",
+                "s3:GetBucket*",
+                "s3:List*",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":s3:::",
+                      {
+                        "Ref": "DistributionBucketName",
+                      },
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":s3:::",
+                      {
+                        "Ref": "DistributionBucketName",
+                      },
+                      "/support/PROD/contributions-referrals/contributions-referrals.zip",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": "ssm:GetParametersByPath",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:ssm:",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":parameter/PROD/support/contributions-referrals",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "ssm:GetParameters",
+                "ssm:GetParameter",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:ssm:",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":parameter/PROD/support/contributions-referrals/*",
+                  ],
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "referralcountServiceRoleDefaultPolicy46E43BAE",
+        "Roles": [
+          {
+            "Ref": "referralcountServiceRoleA327D61C",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
     },
   },
 }
