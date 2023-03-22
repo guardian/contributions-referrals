@@ -11,7 +11,7 @@
     "@types/pg-format": "^1.0.1",
     "node-fetch": "^2.1.2",
     "aws-sdk": "^2.264.1",
-    "moment": "2.22.2",
+    "moment": "2.29.4",
     "thrift-serializer": "^1.1.0",
     "typescript": "4.2.4",
     "pg": "^8.6.0",
