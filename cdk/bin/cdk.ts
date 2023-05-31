@@ -1,7 +1,28 @@
 import "source-map-support/register";
-import { App } from "aws-cdk-lib";
-import { ContributionsReferrals } from "../lib/contributions-referrals";
+import {App} from "aws-cdk-lib";
+import {ContributionsReferrals} from "../lib/contributions-referrals";
+import type {ContributionsReferralsProps} from "../lib/contributions-referrals";
 
 const app = new App();
-new ContributionsReferrals(app, "ContributionsReferrals-CODE", { stack: "support", stage: "CODE" });
-new ContributionsReferrals(app, "ContributionsReferrals-PROD", { stack: "support", stage: "PROD" });
+
+export const codeProps: ContributionsReferralsProps = {
+    stack: "support",
+    stage: "CODE",
+    certificateId: "b384a6a0-2f54-4874-b99b-96eeff96c009",
+    domainName: "contribution-referrals-code.support.guardianapis.com",
+    hostedZoneId: "Z3KO35ELNWZMSX",
+    streamArn: "arn:aws:kinesis:eu-west-1:865473395570:stream/acquisitions-stream-CODE",
+};
+
+export const prodProps: ContributionsReferralsProps = {
+    stack: "support",
+    stage: "PROD",
+    certificateId: "b384a6a0-2f54-4874-b99b-96eeff96c009",
+    domainName: "contribution-referrals.support.guardianapis.com",
+    hostedZoneId: "Z3KO35ELNWZMSX",
+    streamArn: "arn:aws:kinesis:eu-west-1:865473395570:stream/acquisitions-stream-PROD",
+};
+
+new ContributionsReferrals(app, "ContributionsReferrals-CODE", codeProps);
+new ContributionsReferrals(app, "ContributionsReferrals-PROD", prodProps);
+
